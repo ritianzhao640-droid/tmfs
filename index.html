@@ -1,264 +1,945 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>踏马封神 - 燃烧分红</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{background:#0b0f17;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
-    .container{max-width:420px;margin:0 auto;padding:25px}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <title>踏马封神斗地主</title>
     
-    .wallet-bar{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border:1px solid #334155;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-    .wallet-status{display:flex;align-items:center;gap:8px;font-size:14px}
-    .status-dot{width:8px;height:8px;border-radius:50%;background:#ef4444}
-    .status-dot.connected{background:#10b981;box-shadow:0 0 8px #10b981}
-    .wallet-btn{background:#3b82f6;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+    <script src="abi.js"></script>
     
-    .card{background:#121a29;border-radius:16px;padding:24px;margin-bottom:16px}
-    .title{font-size:22px;font-weight:700;color:#ffdf4f;margin-bottom:6px}
-    .subtitle{color:#9ca3af;font-size:14px;margin-bottom:20px}
-    
-    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px;align-items:center}
-    .label{color:#9ca3af;font-size:13px}
-    .value{color:#fff;font-weight:600;font-size:16px}
-    .error-text{color:#ef4444;font-size:11px;margin-top:4px}
-    
-    input{width:100%;background:#1e293b;border:none;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;margin-bottom:8px}
-    button{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:8px}
-    .btn-approve{background:#f59e0b;color:#fff}
-    .btn-approve:disabled{opacity:0.6}
-    .btn-burn{background:#ef4444;color:#fff}
-    .btn-claim{background:#10b981;color:#fff;margin-top:8px}
-    .btn-refresh{background:#3b82f6;color:#fff}
-    
-    .debug-box{background:#0f172a;border:1px solid #334155;padding:10px;border-radius:8px;margin-top:10px;font-size:10px;color:#94a3b8;word-break:break-all;max-height:100px;overflow-y:auto}
-  </style>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif; 
+            background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%); 
+            min-height: 100vh; 
+            color: #1a1a1a; 
+            overflow-x: hidden;
+            padding-bottom: 90px;
+        }
+        
+        @media (min-width: 768px) {
+            body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; background: #f0f0f0; }
+            .mobile-container { width: 100%; max-width: 480px; background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%); min-height: 100vh; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.1); }
+        }
+        
+        /* 页面容器 */
+        #homePage, #burnPage, #claimPage, #gamePage, #rankPage { min-height: 100vh; display: none; position: relative; }
+        #homePage { display: block; animation: fadeIn 0.4s ease; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 顶部导航 */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .top-title { font-size: 18px; font-weight: 700; position: absolute; left: 50%; transform: translateX(-50%); }
+        .top-action { font-size: 14px; font-weight: 600; color: #666; cursor: pointer; }
+        
+        .back-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #1a1a1a; }
+        
+        .wallet-btn { width: 40px; height: 40px; border-radius: 50%; background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .wallet-btn.connected { background: linear-gradient(135deg, #00d26a 0%, #00a854 100%); }
+        
+        /* 主内容区 */
+        .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+        
+        /* 第一行：余额 + AI池（双卡片布局） */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+        .stat-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
+        .stat-label { font-size: 12px; color: #999; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 22px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; }
+        .stat-sub { font-size: 11px; color: #00a854; margin-top: 4px; font-weight: 600; }
+        
+        /* 第二行：今日币价（全宽长条） */
+        .price-section-full { margin: 0 0 16px; }
+        .price-module-full { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 20px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+            border: 1px solid rgba(0,0,0,0.05); 
+            display: flex; 
+            align-items: center;
+            justify-content: space-between;
+        }
+        .price-left { flex: 1; }
+        .price-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .price-title-text { font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .price-change-full { font-size: 12px; font-weight: 700; color: #00a854; background: rgba(0,168,84,0.1); padding: 4px 8px; border-radius: 12px; }
+        .price-change-full.down { color: #dc2626; background: rgba(220,38,38,0.1); }
+        .price-value-full { font-size: 28px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
+        .price-chart-full { width: 100px; height: 40px; }
+        .price-chart-full svg { width: 100%; height: 100%; }
+        
+        /* 第三行：斗地主游戏入口（全宽大模块） */
+        .game-section-full { margin-bottom: 20px; }
+        .game-module-full { 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); 
+            border-radius: 24px; 
+            padding: 32px 24px; 
+            color: white; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+            text-align: center; 
+            position: relative; 
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .game-module-full:active { transform: scale(0.98); }
+        .game-module-full::before { content: '♠️'; position: absolute; top: -10px; right: -10px; font-size: 80px; opacity: 0.05; }
+        .game-module-full::after { content: '♥️'; position: absolute; bottom: -20px; left: -20px; font-size: 100px; opacity: 0.03; }
+        
+        .game-status-full { font-size: 11px; opacity: 0.8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .game-title-full { font-size: 24px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 1; }
+        .game-desc-full { font-size: 13px; opacity: 0.8; margin-bottom: 20px; position: relative; z-index: 1; }
+        .play-btn-full { 
+            background: white; 
+            color: #1a1a1a; 
+            border: none; 
+            padding: 14px 32px; 
+            border-radius: 24px; 
+            font-size: 15px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            position: relative; 
+            z-index: 1;
+            display: inline-block;
+        }
+        
+        /* 燃烧页面 */
+        .page-header-simple { padding: 20px; text-align: center; }
+        .page-title-simple { font-size: 28px; font-weight: 800; margin-bottom: 4px; color: #1a1a1a; }
+        .page-subtitle-simple { font-size: 14px; color: #666; }
+        
+        .input-card { background: white; border-radius: 24px; padding: 28px 20px; margin: 0 0 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
+        .input-label { font-size: 13px; color: #999; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .big-input { width: 100%; border: none; font-size: 42px; font-weight: 700; text-align: center; color: #1a1a1a; outline: none; margin-bottom: 16px; font-family: inherit; }
+        .big-input::placeholder { color: #ddd; }
+        
+        .quick-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .quick-btn { background: #f5f5f5; border: 2px solid transparent; color: #1a1a1a; padding: 10px 16px; border-radius: 14px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; user-select: none; }
+        .quick-btn:active { transform: scale(0.95); background: #e5e5e5; }
+        .quick-btn.active-long { background: #1a1a1a; color: white; border-color: #1a1a1a; }
+        
+        .action-btn { width: 100%; background: #1a1a1a; color: white; border: none; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .action-btn:active:not(:disabled) { transform: scale(0.98); }
+        .action-btn.burn { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); }
+        .action-btn.claim { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+        .info-card { background: #fafafa; border-radius: 14px; padding: 14px; text-align: center; }
+        .info-label { font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 500; }
+        .info-value { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+        
+        /* 优化后的领取分红页面 - 紧凑版 */
+        .claim-container { padding: 16px; }
+        .claim-header { background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 24px; text-align: center; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(245,158,11,0.1); }
+        .claim-label { font-size: 12px; color: #92400e; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .claim-amount { font-size: 36px; font-weight: 800; color: #b45309; margin-bottom: 4px; letter-spacing: -1px; }
+        .claim-unit { font-size: 14px; color: #d97706; font-weight: 600; margin-bottom: 20px; }
+        .claim-btn { width: 100%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(245,158,11,0.3); }
+        .claim-btn:disabled { opacity: 0.5; background: #ccc; box-shadow: none; cursor: not-allowed; }
+        
+        .claim-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .claim-stat-item { background: white; border-radius: 12px; padding: 12px 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .claim-stat-label { font-size: 10px; color: #999; margin-bottom: 4px; }
+        .claim-stat-value { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+        
+        .claim-rule { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 12px; color: #666; line-height: 1.6; text-align: center; }
+        .claim-rule-title { font-weight: 700; color: #1a1a1a; margin-bottom: 6px; font-size: 13px; }
+        
+        /* 游戏页面 */
+        .game-table { position: relative; height: calc(100vh - 200px); display: flex; flex-direction: column; }
+        
+        /* AI玩家 */
+        .ai-players { display: flex; justify-content: space-between; padding: 20px 40px; position: relative; }
+        .ai-player { text-align: center; }
+        .ai-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 3px solid white; position: relative; }
+        .ai-avatar.landlord::after { content: '👑'; position: absolute; top: -5px; right: -5px; font-size: 16px; background: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+        .ai-avatar.active { border-color: #00d26a; box-shadow: 0 0 0 3px rgba(0,210,106,0.2); }
+        .ai-name { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+        .ai-count { font-size: 11px; color: #999; background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 10px; display: inline-block; }
+        .ai-status { font-size: 10px; color: #00a854; margin-top: 4px; font-weight: 600; }
+        
+        /* 牌桌中央 */
+        .table-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .pot-info { background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+        .last-play-area { min-height: 100px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: -5px; margin-bottom: 20px; }
+        .card-played { width: 40px; height: 56px; background: white; border-radius: 6px; border: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-right: -10px; }
+        .card-red { color: #dc2626; }
+        .card-black { color: #1a1a1a; }
+        .play-info { font-size: 13px; color: #666; text-align: center; }
+        
+        /* 玩家区域 */
+        .player-area { background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 20%, #ffffff 100%); padding: 20px 16px 30px; position: fixed; bottom: 80px; left: 0; right: 0; z-index: 10; }
+        .player-hand { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding: 10px 0; }
+        .hand-card { width: 44px; height: 62px; background: white; border-radius: 6px; border: 1px solid #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); position: relative; }
+        .hand-card.selected { transform: translateY(-15px); border-color: #00d26a; box-shadow: 0 4px 12px rgba(0,210,106,0.3); }
+        .hand-card.back { background: linear-gradient(135deg, #1a3a8f 0%, #2d5bc6 100%); border: none; }
+        
+        .game-controls { display: flex; gap: 10px; justify-content: center; }
+        .game-btn { padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.3s; }
+        .game-btn-primary { background: #1a1a1a; color: white; flex: 1; max-width: 120px; }
+        .game-btn-secondary { background: #f5f5f5; color: #666; border: 1px solid #e0e0e0; }
+        .game-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* 排行页面 */
+        .rank-header { padding: 60px 20px 20px; text-align: center; background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%); }
+        .rank-title { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+        .rank-subtitle { font-size: 14px; color: #666; }
+        
+        .rank-tabs { display: flex; padding: 0 20px; margin-bottom: 16px; gap: 10px; }
+        .rank-tab { flex: 1; padding: 12px; border-radius: 12px; border: none; background: #f5f5f5; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; }
+        .rank-tab.active { background: #1a1a1a; color: white; }
+        
+        .rank-list { padding: 0 16px; }
+        .rank-item { display: flex; align-items: center; padding: 12px 16px; background: white; border-radius: 16px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .rank-number { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; margin-right: 12px; background: #f5f5f5; color: #666; }
+        .rank-number.top1 { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #8b6914; }
+        .rank-number.top2 { background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%); color: #666; }
+        .rank-number.top3 { background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%); color: white; }
+        
+        .rank-info { flex: 1; }
+        .rank-address { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 2px; }
+        .rank-amount { font-size: 12px; color: #666; }
+        .rank-reward { font-size: 14px; font-weight: 700; color: #00a854; }
+        
+        .my-rank { position: fixed; bottom: 90px; left: 16px; right: 16px; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); color: white; padding: 16px 20px; border-radius: 16px; display: flex; align-items: center; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .my-rank-label { font-size: 12px; opacity: 0.8; margin-bottom: 2px; }
+        .my-rank-value { font-size: 16px; font-weight: 700; }
+        
+        /* 底部导航 */
+        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); border-radius: 30px; padding: 10px 14px; display: flex; gap: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); z-index: 1000; max-width: 95%; }
+        @media (min-width: 768px) { .bottom-nav { position: absolute; } }
+        
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 8px 14px; border-radius: 18px; cursor: pointer; transition: all 0.3s; min-width: 56px; color: #999; font-size: 10px; font-weight: 600; border: none; background: transparent; }
+        .nav-item.active { background: #1a1a1a; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .nav-icon { font-size: 18px; line-height: 1; }
+        
+        /* 提示 */
+        .tx-toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(26,26,26,0.95); color: white; padding: 14px 24px; border-radius: 14px; font-size: 14px; font-weight: 500; z-index: 10000; display: none; backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-width: 90%; text-align: center; }
+        .tx-toast.show { display: block; }
+        .tx-toast.error { background: rgba(220,38,38,0.95); }
+        
+        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .network-badge { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 9999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .network-badge.show { display: block; }
+        
+        .warning-box { background: #fffbeb; border: 1px solid #f59e0b; border-radius: 14px; padding: 14px; margin: 16px; font-size: 13px; color: #92400e; }
+        
+        .auth-section { position: fixed; top: 80px; right: 16px; z-index: 100; }
+        @media (min-width: 768px) { .auth-section { position: absolute; } }
+        .auth-btn { background: #1a1a1a; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .auth-btn.authorized { background: #00d26a; }
+    </style>
 </head>
 <body>
-<div class="container">
+    <div class="mobile-container">
+        <div id="networkBadge" class="network-badge">请切换网络</div>
+        <div id="txToast" class="tx-toast"></div>
 
-  <div class="wallet-bar">
-    <div class="wallet-status">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">未连接</span>
+        <!-- 首页 -->
+        <div id="homePage">
+            <div class="top-nav">
+                <div class="brand">踏马封神</div>
+                <button class="wallet-btn" id="walletBtn" onclick="connectWallet()">💼</button>
+            </div>
+            
+            <div id="authSection" class="auth-section" style="display: none;">
+                <button class="auth-btn" id="authBtn" onclick="authorizeToken()">授权</button>
+            </div>
+
+            <div class="container">
+                <!-- 第一行：余额 + AI池（按手绘图：左余额，右AI池） -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">我的余额</div>
+                        <div class="stat-value" id="balance">0.00</div>
+                        <div class="stat-sub" id="tokenSymbolDisplay">TMFS</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">AI奖池</div>
+                        <div class="stat-value" id="aiPoolAmount">0.00</div>
+                        <div class="stat-sub">实时累积</div>
+                    </div>
+                </div>
+
+                <!-- 第二行：今日币价（全宽长条） -->
+                <div class="price-section-full">
+                    <div class="price-module-full">
+                        <div class="price-left">
+                            <div class="price-header-row">
+                                <div class="price-title-text">今日币价</div>
+                                <div class="price-change-full" id="priceChange">+5.24%</div>
+                            </div>
+                            <div class="price-value-full" id="tokenPrice">$0.0042</div>
+                        </div>
+                        <div class="price-chart-full">
+                            <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+                                <path d="M0,30 Q25,28 50,25 T100,20 T150,15 T200,10" fill="none" stroke="#00a854" stroke-width="2" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第三行：斗地主游戏入口（全宽大方块） -->
+                <div class="game-section-full">
+                    <div class="game-module-full" onclick="startGame()">
+                        <div class="game-status-full">🔥 热门对战</div>
+                        <div class="game-title-full">开始斗地主</div>
+                        <div class="game-desc-full">1v2 AI对战 | 赢取代币奖励</div>
+                        <button class="play-btn-full">立即开始</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏页面 -->
+        <div id="gamePage">
+            <div class="top-nav">
+                <button class="back-btn" onclick="exitGame()">←</button>
+                <div class="top-title">房间 #<span id="gameRoomId">001</span></div>
+                <div class="top-action" id="gamePot">奖池: 0 TMFS</div>
+            </div>
+
+            <div class="game-table">
+                <div class="ai-players">
+                    <div class="ai-player" id="aiLeft">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-name">AI-李白</div>
+                        <div class="ai-count" id="aiLeftCards">17张</div>
+                        <div class="ai-status" id="aiLeftStatus">思考中...</div>
+                    </div>
+                    <div class="ai-player" id="aiRight">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-name">AI-杜甫</div>
+                        <div class="ai-count" id="aiRightCards">17张</div>
+                        <div class="ai-status" id="aiRightStatus">等待中</div>
+                    </div>
+                </div>
+
+                <div class="table-center">
+                    <div class="pot-info" id="centerPot">💰 奖池: 0 TMFS | 倍数: x1</div>
+                    <div class="last-play-area" id="lastPlayArea">
+                        <div class="play-info">点击"开始对战"开始游戏</div>
+                    </div>
+                    <div class="play-info" id="turnInfo">等待玩家加入...</div>
+                </div>
+            </div>
+
+            <div class="player-area">
+                <div class="player-hand" id="playerHand">
+                    <!-- 手牌动态生成 -->
+                </div>
+                <div class="game-controls" id="gameControls" style="display: none;">
+                    <button class="game-btn game-btn-secondary" onclick="skipTurn()">跳过</button>
+                    <button class="game-btn game-btn-primary" onclick="playCards()">出牌</button>
+                </div>
+                <div class="game-controls" id="startControl">
+                    <button class="game-btn game-btn-primary" onclick="startGame()" style="max-width: 200px;">开始对战 (质押 100 TMFS)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 燃烧页面 -->
+        <div id="burnPage">
+            <div class="top-nav">
+                <button class="back-btn" onclick="showPage('home')">←</button>
+                <div class="top-title">燃烧代币</div>
+                <div style="width: 40px;"></div>
+            </div>
+
+            <div class="container" style="padding-top: 20px;">
+                <div class="input-card">
+                    <div class="input-label">燃烧数量 (TMFS)</div>
+                    <input type="number" class="big-input" id="burnAmountInput" placeholder="0" value="0">
+                    
+                    <div class="quick-buttons">
+                        <button class="quick-btn" ontouchstart="startLongPress(this, 1000)" ontouchend="endLongPress()" onmousedown="startLongPress(this, 1000)" onmouseup="endLongPress()" onmouseleave="endLongPress()">+1k</button>
+                        <button class="quick-btn" ontouchstart="startLongPress(this, 10000)" ontouchend="endLongPress()" onmousedown="startLongPress(this, 10000)" onmouseup="endLongPress()" onmouseleave="endLongPress()">+1w</button>
+                        <button class="quick-btn" ontouchstart="startLongPress(this, 100000)" ontouchend="endLongPress()" onmousedown="startLongPress(this, 100000)" onmouseup="endLongPress()" onmouseleave="endLongPress()">+10w</button>
+                    </div>
+                    
+                    <button class="action-btn burn" onclick="burnTokens()" id="burnBtn">确认销毁</button>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">我的累计燃烧</div>
+                        <div class="info-value" id="myTotalBurned">0</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">全球燃烧总量</div>
+                        <div class="info-value" id="globalBurned">0</div>
+                    </div>
+                </div>
+
+                <div id="dividendWarning" class="warning-box" style="display: none;">
+                    <b>⚠️ 需要配置分红合约</b><br>
+                    请在 abi.js 中配置 dividendAddress 和 dividendABI
+                </div>
+            </div>
+        </div>
+
+        <!-- 领取分红页面 - 优化紧凑版 -->
+        <div id="claimPage">
+            <div class="top-nav">
+                <button class="back-btn" onclick="showPage('home')">←</button>
+                <div class="top-title">领取分红</div>
+                <div style="width: 40px;"></div>
+            </div>
+
+            <div class="claim-container">
+                <div class="claim-header">
+                    <div class="claim-label">可领取 WBNB</div>
+                    <div class="claim-amount" id="pendingWBNB">0.0000</div>
+                    <div class="claim-unit">WBNB</div>
+                    <button class="claim-btn" id="claimBtn" onclick="claimDividend()" disabled>领取分红</button>
+                </div>
+
+                <div class="claim-stats">
+                    <div class="claim-stat-item">
+                        <div class="claim-stat-label">已领取</div>
+                        <div class="claim-stat-value" id="totalClaimedWBNB">0</div>
+                    </div>
+                    <div class="claim-stat-item">
+                        <div class="claim-stat-label">积分</div>
+                        <div class="claim-stat-value" id="dividendPoints">0</div>
+                    </div>
+                    <div class="claim-stat-item">
+                        <div class="claim-stat-label">我的燃烧</div>
+                        <div class="claim-stat-value" id="myBurnAmount">0</div>
+                    </div>
+                    <div class="claim-stat-item">
+                        <div class="claim-stat-label">全球燃烧</div>
+                        <div class="claim-stat-value" id="globalBurnAmount">0</div>
+                    </div>
+                </div>
+
+                <div class="claim-rule">
+                    <div class="claim-rule-title">💡 分红规则</div>
+                    销毁 TMFS 获得分红积分，每日按积分占比分配 WBNB，可随时领取
+                </div>
+            </div>
+        </div>
+
+        <!-- 排行页面 -->
+        <div id="rankPage">
+            <div class="rank-header">
+                <div class="rank-title">🏆 燃烧排行</div>
+                <div class="rank-subtitle">全球 TMFS 燃烧量排行榜</div>
+            </div>
+
+            <div class="rank-tabs">
+                <button class="rank-tab active" onclick="switchRankTab('burn')">燃烧排行</button>
+                <button class="rank-tab" onclick="switchRankTab('reward')">收益排行</button>
+            </div>
+
+            <div class="rank-list" id="rankList">
+                <!-- 动态生成 -->
+                <div class="rank-item">
+                    <div class="rank-number top1">1</div>
+                    <div class="rank-info">
+                        <div class="rank-address">0x8888...8888</div>
+                        <div class="rank-amount">燃烧 1,000,000 TMFS</div>
+                    </div>
+                    <div class="rank-reward">+5.2 BNB</div>
+                </div>
+                <div class="rank-item">
+                    <div class="rank-number top2">2</div>
+                    <div class="rank-info">
+                        <div class="rank-address">0x7777...7777</div>
+                        <div class="rank-amount">燃烧 800,000 TMFS</div>
+                    </div>
+                    <div class="rank-reward">+4.1 BNB</div>
+                </div>
+                <div class="rank-item">
+                    <div class="rank-number top3">3</div>
+                    <div class="rank-info">
+                        <div class="rank-address">0x6666...6666</div>
+                        <div class="rank-amount">燃烧 600,000 TMFS</div>
+                    </div>
+                    <div class="rank-reward">+3.2 BNB</div>
+                </div>
+                <!-- 更多排名... -->
+            </div>
+
+            <div class="my-rank">
+                <div style="flex: 1;">
+                    <div class="my-rank-label">我的排名</div>
+                    <div class="my-rank-value" id="myRank">第 99+ 名 | 燃烧 0 TMFS</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; opacity: 0.8;">预计收益</div>
+                    <div style="font-size: 16px; font-weight: 700;" id="myRankReward">0 BNB</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="showPage('home')" data-page="home">
+                <span class="nav-icon">🏠</span>
+                <span>首页</span>
+            </button>
+            <button class="nav-item" onclick="showPage('burn')" data-page="burn">
+                <span class="nav-icon">🔥</span>
+                <span>燃烧</span>
+            </button>
+            <button class="nav-item" onclick="showPage('claim')" data-page="claim">
+                <span class="nav-icon">💎</span>
+                <span>领分红</span>
+            </button>
+            <button class="nav-item" onclick="showPage('rank')" data-page="rank">
+                <span class="nav-icon">🏆</span>
+                <span>排行</span>
+            </button>
+        </div>
     </div>
-    <button class="wallet-btn" id="connectBtn" onclick="toggleConnect()">连接钱包</button>
-  </div>
 
-  <div class="card">
-    <div class="title">🔥 踏马封神 燃烧分红</div>
-    <div class="subtitle">Burn To Earn | 燃烧获取分红权</div>
+    <script>
+        // ==================== 配置检查 ====================
+        if (!window.CONTRACT_CONFIG) {
+            alert('错误：未找到 abi.js 文件！');
+            throw new Error('CONTRACT_CONFIG not found');
+        }
 
-    <div class="panel">
-      <div class="label">代币余额</div>
-      <div class="value" id="balance">--</div>
-    </div>
-    
-    <div class="panel">
-      <div>
-        <div class="label">我已燃烧</div>
-        <div class="error-text" id="burnError"></div>
-      </div>
-      <div class="value" id="myburn">--</div>
-    </div>
-    
-    <div class="panel">
-      <div>
-        <div class="label">可领取分红</div>
-        <div class="error-text" id="claimError"></div>
-      </div>
-      <div class="value" id="pending">--</div>
-    </div>
+        const CONFIG = window.CONTRACT_CONFIG;
+        const TOKEN_ABI = CONFIG.tokenABI;
+        const DIVIDEND_ABI = CONFIG.dividendABI || [];
+        const TOKEN_ADDRESS = CONFIG.tokenAddress;
+        const DIVIDEND_ADDRESS = CONFIG.dividendAddress;
+        const CHAIN_ID = CONFIG.chainId || "0x38";
+        const CHAIN_NAME = CONFIG.chainName || "BSC Mainnet";
+        const RPC_URL = CONFIG.rpcUrl || "https://bsc-dataseed.binance.org/";
+        
+        const HAS_DIVIDEND_CONTRACT = DIVIDEND_ADDRESS && DIVIDEND_ABI.length > 0;
 
-    <div style="margin:20px 0;">
-      <input id="amount" type="number" placeholder="输入燃烧数量" min="0" step="0.01"/>
-    </div>
+        // ==================== 全局变量 ====================
+        let provider = null;
+        let signer = null;
+        let tokenContract = null;
+        let dividendContract = null;
+        let gameContract = null; // TODO: Contract Call - 游戏合约实例
+        let userAddress = null;
+        let tokenDecimals = CONFIG.decimals || 18;
+        let tokenSymbol = "TMFS";
+        let longPressTimer = null;
+        let longPressInterval = null;
+        const LONG_PRESS_DELAY = 500;
+        let selectedCards = []; // 选中的牌索引
 
-    <button class="btn-approve" id="btnApprove" onclick="approve()">🔓 授权代币</button>
-    <button class="btn-burn" onclick="burn()">🔥 立即燃烧</button>
-    <button class="btn-claim" onclick="claim()">💰 领取分红</button>
-    <button class="btn-refresh" onclick="updateData()">🔄 刷新数据</button>
-    
-    <div class="debug-box" id="debugBox"></div>
-  </div>
+        // ==================== 工具函数 ====================
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('txToast');
+            toast.textContent = message;
+            toast.className = 'tx-toast ' + (isError ? 'error' : '') + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
 
-</div>
+        function formatAddress(address) {
+            if (!address || address === '0x0000000000000000000000000000000000000000') return '无';
+            return address.slice(0, 6) + '...' + address.slice(-4);
+        }
 
-<script src="https://cdn.jsdelivr.net/npm/web3@1.10.3/dist/web3.min.js"></script>
-<script>
-const CONTRACT = "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777";
-const MAX_UINT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+        function formatAmount(amount, decimals = 2) {
+            if (!amount || amount === '0') return '0.'.padEnd(decimals + 2, '0');
+            return parseFloat(amount).toFixed(decimals);
+        }
 
-const ABI = [
-  // ERC20 标准 - 确定可用
-  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","stateMutability":"nonpayable","type":"function"},
-  {"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","stateMutability":"nonpayable","type":"function"},
-  // 燃烧分红 - 可能不存在或名字不同
-  {"inputs":[],"name":"claim","stateMutability":"nonpayable","type":"function"},
-  {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"name":"amount","type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"name":"amount","type":"uint256"}],"stateMutability":"view","type":"function"}
-];
+        // ==================== 价格查询 ====================
+        async function fetchTokenPrice() {
+            // TODO: Contract Call - 从合约或价格预言机查询TMFS实时价格
+            // 建议接口: 
+            // 1. 调用 DEX Router (PancakeSwap) getAmountsOut 查询1TMFS对USDT价格
+            // 2. 或调用自定义 PriceOracle 合约 getPrice()
+            // 3. 或从后端API获取
+            
+            try {
+                // 模拟数据，实际应从合约获取
+                const mockPrice = 0.0042;
+                const mockChange = 5.24;
+                
+                document.getElementById('tokenPrice').textContent = '$' + mockPrice.toFixed(4);
+                const changeEl = document.getElementById('priceChange');
+                changeEl.textContent = (mockChange > 0 ? '+' : '') + mockChange + '%';
+                changeEl.className = 'price-change-full ' + (mockChange < 0 ? 'down' : '');
+                
+            } catch (error) {
+                console.error('获取价格失败:', error);
+            }
+        }
 
-let web3, account, contract, isConnected = false;
+        // ==================== 长按功能 ====================
+        function startLongPress(btn, amount) {
+            btn.classList.add('active-long');
+            addToBurnInput(amount);
+            
+            longPressTimer = setTimeout(() => {
+                longPressInterval = setInterval(() => {
+                    addToBurnInput(amount);
+                }, 100);
+            }, LONG_PRESS_DELAY);
+        }
 
-function log(msg) {
-  document.getElementById('debugBox').innerHTML += msg + '<br>';
-}
+        function endLongPress() {
+            if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+            if (longPressInterval) { clearInterval(longPressInterval); longPressInterval = null; }
+            document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active-long'));
+        }
 
-async function toggleConnect() {
-  if (isConnected) {
-    isConnected = false;
-    account = null;
-    document.getElementById('statusDot').classList.remove('connected');
-    document.getElementById('statusText').textContent = '未连接';
-    document.getElementById('connectBtn').textContent = '连接钱包';
-  } else {
-    connect();
-  }
-}
+        function addToBurnInput(amount) {
+            const input = document.getElementById('burnAmountInput');
+            const current = parseFloat(input.value) || 0;
+            input.value = current + amount;
+        }
 
-async function connect() {
-  try {
-    if (!window.ethereum) {
-      alert('请使用 TokenPocket 钱包浏览器');
-      return;
-    }
-    
-    web3 = new Web3(window.ethereum);
-    const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
-    account = accounts[0];
-    contract = new web3.eth.Contract(ABI, CONTRACT);
-    isConnected = true;
-    
-    document.getElementById('statusDot').classList.add('connected');
-    document.getElementById('statusText').textContent = account.slice(0,6) + '...' + account.slice(-4);
-    document.getElementById('connectBtn').textContent = '断开连接';
-    
-    log('连接成功: ' + account);
-    await updateData();
-    await checkApprove();
-    
-  } catch (err) {
-    alert('连接失败: ' + err.message);
-  }
-}
+        // ==================== 钱包连接 ====================
+        async function connectWallet() {
+            if (!window.ethereum) { alert('请安装 MetaMask！'); return; }
+            
+            const btn = document.getElementById('walletBtn');
+            btn.innerHTML = '<span class="loading"></span>';
+            
+            try {
+                // 检查网络
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                if (chainId !== CHAIN_ID) {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CHAIN_ID }]
+                    });
+                }
+                
+                provider = new ethers.BrowserProvider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = await provider.getSigner();
+                userAddress = await signer.getAddress();
+                
+                // 初始化合约
+                tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+                if (HAS_DIVIDEND_CONTRACT) {
+                    dividendContract = new ethers.Contract(DIVIDEND_ADDRESS, DIVIDEND_ABI, signer);
+                }
+                
+                // TODO: Contract Call - 初始化游戏合约
+                // gameContract = new ethers.Contract(GAME_ADDRESS, GAME_ABI, signer);
+                
+                btn.classList.add('connected');
+                btn.innerHTML = '✓';
+                document.getElementById('authSection').style.display = 'block';
+                
+                await loadAllData();
+                showToast(`已连接: ${tokenSymbol}`);
+                
+            } catch (error) {
+                console.error('连接失败:', error);
+                btn.innerHTML = '💼';
+                showToast('连接失败: ' + error.message, true);
+            }
+        }
 
-async function updateData() {
-  if (!isConnected) return alert('请先连接钱包');
-  
-  document.getElementById('debugBox').innerHTML = ''; // 清空日志
-  
-  // 1. 查询余额（确定可用）
-  try {
-    const bal = await contract.methods.balanceOf(account).call();
-    if (bal === undefined || bal === null) {
-      document.getElementById('balance').textContent = '查询失败';
-    } else {
-      document.getElementById('balance').textContent = 
-        parseFloat(web3.utils.fromWei(bal.toString(), 'ether')).toFixed(2) + ' 踏马封神';
-    }
-  } catch (err) {
-    document.getElementById('balance').textContent = '错误';
-    log('balanceOf 错误: ' + err.message);
-  }
-  
-  // 2. 查询已燃烧（可能不存在此函数）
-  try {
-    const burned = await contract.methods.burnAmount(account).call();
-    log('burnAmount 原始返回: ' + JSON.stringify(burned));
-    
-    if (burned === undefined || burned === null) {
-      document.getElementById('myburn').textContent = '0 踏马封神';
-      document.getElementById('burnError').textContent = '合约未返回数据';
-    } else {
-      const burnedEth = web3.utils.fromWei(burned.toString(), 'ether');
-      document.getElementById('myburn').textContent = burnedEth + ' 踏马封神';
-      document.getElementById('burnError').textContent = '';
-    }
-  } catch (err) {
-    document.getElementById('myburn').textContent = '查询失败';
-    document.getElementById('burnError').textContent = '函数可能不存在';
-    log('burnAmount 错误: ' + err.message);
-  }
-  
-  // 3. 查询分红（可能不存在此函数）
-  try {
-    const claimable = await contract.methods.claimable(account).call();
-    log('claimable 原始返回: ' + JSON.stringify(claimable));
-    
-    if (claimable === undefined || claimable === null) {
-      document.getElementById('pending').textContent = '0 BNB';
-      document.getElementById('claimError').textContent = '合约未返回数据';
-    } else {
-      const claimEth = web3.utils.fromWei(claimable.toString(), 'ether');
-      document.getElementById('pending').textContent = parseFloat(claimEth).toFixed(4) + ' BNB';
-      document.getElementById('claimError').textContent = '';
-    }
-  } catch (err) {
-    document.getElementById('pending').textContent = '查询失败';
-    document.getElementById('claimError').textContent = '函数可能不存在';
-    log('claimable 错误: ' + err.message);
-  }
-}
+        // ==================== 数据加载 ====================
+        async function loadAllData() {
+            if (!tokenContract || !userAddress) return;
+            
+            try {
+                // TODO: Contract Call - 获取用户余额
+                const balance = await tokenContract.balanceOf(userAddress);
+                document.getElementById('balance').textContent = formatAmount(ethers.formatUnits(balance, tokenDecimals));
+                
+                // TODO: Contract Call - 获取AI奖池余额 (从游戏合约或奖池合约)
+                const totalSupply = await tokenContract.totalSupply();
+                document.getElementById('aiPoolAmount').textContent = formatAmount(ethers.formatUnits(totalSupply, tokenDecimals) * 0.01);
+                
+                await checkAllowance();
+                
+                if (HAS_DIVIDEND_CONTRACT) {
+                    await loadDividendData();
+                }
+                
+                // TODO: Contract Call - 获取实时价格
+                await fetchTokenPrice();
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+            }
+        }
 
-async function checkApprove() {
-  try {
-    const allowance = await contract.methods.allowance(account, CONTRACT).call();
-    const allowed = parseFloat(web3.utils.fromWei(allowance.toString(), 'ether'));
-    const btn = document.getElementById('btnApprove');
-    if (allowed > 1000000) {
-      btn.textContent = '✅ 已授权（无需重复）';
-      btn.disabled = true;
-    } else {
-      btn.textContent = '🔓 授权代币';
-      btn.disabled = false;
-    }
-  } catch (err) {
-    log('检查授权失败: ' + err.message);
-  }
-}
+        async function checkAllowance() {
+            if (!tokenContract || !userAddress) return;
+            try {
+                const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
+                const allowance = await tokenContract.allowance(userAddress, spender);
+                const btn = document.getElementById('authBtn');
+                if (allowance > 0) { btn.textContent = '已授权'; btn.classList.add('authorized'); }
+            } catch (error) { console.error('检查授权失败:', error); }
+        }
 
-async function approve() {
-  const btn = document.getElementById('btnApprove');
-  btn.textContent = '授权中...';
-  try {
-    await contract.methods.approve(CONTRACT, MAX_UINT).send({from: account});
-    btn.textContent = '✅ 已授权（无需重复）';
-    btn.disabled = true;
-  } catch (err) {
-    alert('授权失败');
-    btn.textContent = '🔓 授权代币';
-  }
-}
+        async function authorizeToken() {
+            if (!tokenContract || !userAddress) { alert('请先连接钱包'); return; }
+            const btn = document.getElementById('authBtn');
+            btn.innerHTML = '<span class="loading"></span>';
+            btn.disabled = true;
+            try {
+                const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
+                const tx = await tokenContract.approve(spender, ethers.MaxUint256);
+                showToast('授权交易已发送...');
+                await tx.wait();
+                showToast('授权成功！');
+                await checkAllowance();
+            } catch (error) {
+                showToast('授权失败: ' + error.message, true);
+            } finally { btn.disabled = false; }
+        }
 
-async function burn() {
-  if (!isConnected) return alert('请先连接');
-  const amt = document.getElementById('amount').value;
-  if (!amt) return alert('请输入数量');
-  
-  try {
-    const value = web3.utils.toWei(amt.toString(), 'ether');
-    await contract.methods.transfer(CONTRACT, value).send({from: account});
-    alert('✅ 燃烧成功！');
-    setTimeout(updateData, 2000);
-  } catch (err) {
-    alert('失败: ' + err.message);
-  }
-}
+        // ==================== 燃烧功能 ====================
+        async function burnTokens() {
+            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) { showToast('未配置分红合约', true); return; }
+            const amount = document.getElementById('burnAmountInput').value;
+            if (!amount || amount <= 0) { showToast('请输入有效数量', true); return; }
+            
+            const btn = document.getElementById('burnBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> 处理中...';
+            
+            try {
+                const amountWei = ethers.parseUnits(amount.toString(), tokenDecimals);
+                
+                // TODO: Contract Call - 检查余额
+                const balance = await tokenContract.balanceOf(userAddress);
+                if (balance < amountWei) throw new Error('余额不足');
+                
+                // TODO: Contract Call - 检查授权并执行burn
+                const allowance = await tokenContract.allowance(userAddress, DIVIDEND_ADDRESS);
+                if (allowance < amountWei) {
+                    showToast('正在授权...');
+                    const approveTx = await tokenContract.approve(DIVIDEND_ADDRESS, ethers.MaxUint256);
+                    await approveTx.wait();
+                }
+                
+                const tx = await dividendContract.burn(amountWei);
+                showToast('销毁交易已发送...');
+                await tx.wait();
+                
+                await loadAllData();
+                document.getElementById('burnAmountInput').value = '0';
+                showToast(`成功销毁 ${amount} ${tokenSymbol}！`);
+                
+            } catch (error) {
+                showToast('销毁失败: ' + error.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '确认销毁';
+            }
+        }
 
-async function claim() {
-  if (!isConnected) return alert('请先连接');
-  try {
-    await contract.methods.claim().send({from: account});
-    alert('✅ 领取成功！');
-    setTimeout(updateData, 2000);
-  } catch (err) {
-    alert('失败: ' + err.message);
-  }
-}
-</script>
+        // ==================== 分红功能 ====================
+        async function loadDividendData() {
+            if (!HAS_DIVIDEND_CONTRACT || !dividendContract || !userAddress) return;
+            try {
+                // TODO: Contract Call - 获取可领取分红
+                const pending = await dividendContract.check(userAddress).catch(() => 0);
+                // TODO: Contract Call - 获取用户积分
+                const points = await dividendContract.points(userAddress).catch(() => 0);
+                // TODO: Contract Call - 获取已领取累计
+                const claimed = await dividendContract.claimed(userAddress).catch(() => 0);
+                // TODO: Contract Call - 获取全球燃烧总量
+                const totalBurned = await dividendContract.totalBurned().catch(() => 0);
+                
+                const pendingWBNB = ethers.formatEther(pending);
+                const pointsFormatted = ethers.formatUnits(points, tokenDecimals);
+                
+                document.getElementById('pendingWBNB').textContent = formatAmount(pendingWBNB, 4);
+                document.getElementById('totalClaimedWBNB').textContent = formatAmount(ethers.formatEther(claimed), 4);
+                document.getElementById('dividendPoints').textContent = formatAmount(pointsFormatted);
+                document.getElementById('myBurnAmount').textContent = formatAmount(pointsFormatted);
+                document.getElementById('globalBurnAmount').textContent = formatAmount(ethers.formatUnits(totalBurned, tokenDecimals));
+                document.getElementById('myTotalBurned').textContent = formatAmount(pointsFormatted);
+                document.getElementById('globalBurned').textContent = formatAmount(ethers.formatUnits(totalBurned, tokenDecimals));
+                
+                document.getElementById('claimBtn').disabled = pending <= 0;
+                
+            } catch (error) { console.error('加载分红数据失败:', error); }
+        }
+
+        async function claimDividend() {
+            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) { showToast('未配置分红合约', true); return; }
+            const btn = document.getElementById('claimBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>';
+            try {
+                // TODO: Contract Call - 领取分红
+                const tx = await dividendContract.claim();
+                showToast('领取交易已发送...');
+                await tx.wait();
+                await loadDividendData();
+                showToast('WBNB分红领取成功！');
+            } catch (error) {
+                showToast('领取失败: ' + error.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '领取分红';
+            }
+        }
+
+        // ==================== 游戏功能 ====================
+        async function startGame() {
+            if (!userAddress) { showToast('请先连接钱包', true); return; }
+            
+            // TODO: Contract Call - 创建游戏房间
+            // 1. 调用 gameContract.createRoom(stakeAmount) 
+            // 2. 监听 GameStarted 事件获取房间ID
+            // 3. 或使用 AI 对战模式直接开始
+            
+            showPage('game');
+            showToast('游戏开始！对战AI-李白和AI-杜甫');
+            
+            // 模拟发牌
+            setTimeout(() => {
+                document.getElementById('startControl').style.display = 'none';
+                document.getElementById('gameControls').style.display = 'flex';
+                renderHandCards();
+                document.getElementById('turnInfo').textContent = '请选择要出的牌';
+            }, 1000);
+            
+            // TODO: Contract Call - 获取奖池信息
+            // const gameInfo = await gameContract.getGameInfo(roomId);
+            // document.getElementById('gamePot').textContent = '奖池: ' + formatAmount(ethers.formatUnits(gameInfo.pot)) + ' TMFS';
+        }
+
+        function renderHandCards() {
+            const handContainer = document.getElementById('playerHand');
+            const cards = ['3♠️', '4♥️', '5♣️', '6♦️', '7♠️', '8♥️', '9♣️', '10♦️', 'J♠️', 'Q♥️', 'K♣️', 'A♦️', '2♠️', '小王', '大王', '3♥️', '4♣️'];
+            
+            handContainer.innerHTML = cards.map((card, index) => `
+                <div class="hand-card ${card.includes('♥️') || card.includes('♦️') ? 'card-red' : 'card-black'}" 
+                     onclick="toggleCard(${index})" data-index="${index}">
+                    ${card}
+                </div>
+            `).join('');
+        }
+
+        function toggleCard(index) {
+            const card = document.querySelector(`[data-index="${index}"]`);
+            const idx = selectedCards.indexOf(index);
+            if (idx > -1) {
+                selectedCards.splice(idx, 1);
+                card.classList.remove('selected');
+            } else {
+                selectedCards.push(index);
+                card.classList.add('selected');
+            }
+        }
+
+        async function playCards() {
+            if (selectedCards.length === 0) { showToast('请选择要出的牌', true); return; }
+            
+            // TODO: Contract Call - 出牌
+            // 1. 对选中的牌进行签名
+            // 2. 调用 gameContract.playCards(roomId, cardIndices, signature)
+            // 3. 监听 CardsPlayed 事件
+            
+            showToast('出牌成功！');
+            selectedCards = [];
+            document.querySelectorAll('.hand-card').forEach(c => c.classList.remove('selected'));
+            
+            // 模拟AI回合
+            document.getElementById('turnInfo').textContent = 'AI思考中...';
+            setTimeout(() => {
+                document.getElementById('turnInfo').textContent = '轮到你了';
+            }, 2000);
+        }
+
+        async function skipTurn() {
+            // TODO: Contract Call - 跳过回合 gameContract.skipTurn(roomId)
+            showToast('跳过回合');
+        }
+
+        function exitGame() {
+            if (confirm('确定要退出游戏吗？')) {
+                showPage('home');
+                selectedCards = [];
+                document.getElementById('startControl').style.display = 'block';
+                document.getElementById('gameControls').style.display = 'none';
+                document.getElementById('playerHand').innerHTML = '';
+            }
+        }
+
+        // ==================== 排行功能 ====================
+        async function loadRankData() {
+            // TODO: Contract Call - 获取燃烧排行榜
+            // 建议: 从分红合约获取 burnRecords 或从后端API获取
+            // 1. 获取前100名燃烧地址
+            // 2. 获取用户自己的排名
+            // 3. 计算预计收益 (积分 / 总积分 * 每日分发量)
+            
+            try {
+                // 模拟数据
+                const mockData = [
+                    { rank: 1, address: '0x8888...8888', amount: '1000000', reward: '5.2' },
+                    { rank: 2, address: '0x7777...7777', amount: '800000', reward: '4.1' },
+                    { rank: 3, address: '0x6666...6666', amount: '600000', reward: '3.2' },
+                ];
+                
+                // 实际应从合约获取:
+                // const topBurners = await dividendContract.getTopBurners(100);
+                // const myRank = await dividendContract.getUserRank(userAddress);
+                
+            } catch (error) {
+                console.error('加载排行失败:', error);
+            }
+        }
+
+        function switchRankTab(tab) {
+            document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // TODO: Contract Call - 切换排行类型
+            // if (tab === 'burn') 按燃烧量排序
+            // if (tab === 'reward') 按收益排序
+        }
+
+        // ==================== 页面切换 ====================
+        function showPage(page) {
+            ['homePage', 'gamePage', 'burnPage', 'claimPage', 'rankPage'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            const pageMap = { 'home': 'homePage', 'game': 'gamePage', 'burn': 'burnPage', 'claim': 'claimPage', 'rank': 'rankPage' };
+            if (pageMap[page]) {
+                document.getElementById(pageMap[page]).style.display = 'block';
+            }
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+            
+            // 加载特定页面数据
+            if (page === 'claim' || page === 'burn') {
+                if (tokenContract) { loadAllData(); loadDividendData(); }
+            } else if (page === 'rank') {
+                loadRankData();
+            }
+        }
+
+        // ==================== 初始化 ====================
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', () => location.reload());
+            window.ethereum.on('chainChanged', () => location.reload());
+        }
+
+        window.addEventListener('load', () => {
+            console.log('✅ DApp 已加载');
+            // 定时刷新价格
+            setInterval(fetchTokenPrice, 30000);
+        });
+    </script>
 </body>
 </html>
