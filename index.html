@@ -8,85 +8,515 @@
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0b0f17;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
     .container{max-width:420px;margin:0 auto;padding:25px}
-    .card{background:#121a29;border-radius:16px;padding:24px;margin-bottom:16px}
+    .card{background:#121a29;border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid #1e293b}
     .title{font-size:22px;font-weight:700;color:#ffdf4f;margin-bottom:6px}
     .subtitle{color:#9ca3af;font-size:14px;margin-bottom:20px}
-    .input-box{position:relative}
-    input{width:100%;background:#1e293b;border:none;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;margin-bottom:12px}
-    button{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600}
+    
+    /* 钱包连接区域 */
+    .wallet-box{background:#1e293b;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+    .wallet-btn{background:#3b82f6;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
+    .wallet-btn:hover{background:#2563eb}
+    .wallet-address{font-family:monospace;font-size:13px;color:#9ca3af}
+    
+    .input-box{position:relative;margin-bottom:12px}
+    input{width:100%;background:#1e293b;border:none;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;border:1px solid #374151}
+    input:focus{outline:none;border-color:#3b82f6}
+    
+    button{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.2s}
+    button:disabled{opacity:0.5;cursor:not-allowed}
     .btn-burn{background:#ef4444;color:#fff}
+    .btn-burn:hover{background:#dc2626}
     .btn-claim{background:#10b981;color:#fff;margin-top:8px}
-    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px}
+    .btn-claim:hover{background:#059669}
+    .btn-approve{background:#f59e0b;color:#fff;margin-bottom:8px}
+    .btn-approve:hover{background:#d97706}
+    
+    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px;border:1px solid #1f2937}
     .label{color:#9ca3af;font-size:13px}
-    .value{color:#fff;font-weight:600}
+    .value{color:#fff;font-weight:600;font-size:15px}
+    .value.highlight{color:#ffdf4f}
+    
+    /* 状态提示 */
+    .status-box{background:#064e3b;border:1px solid #059669;border-radius:8px;padding:10px 16px;margin-top:12px;font-size:13px;color:#6ee7b7;display:none}
+    .status-box.show{display:block}
+    .status-box.error{background:#7f1d1d;border-color:#ef4444;color:#fca5a5}
+    
+    /* 加载动画 */
+    .loading{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin 0.8s linear infinite;margin-right:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
 <div class="container">
 
+  <!-- 连接钱包卡片 -->
   <div class="card">
+    <div class="wallet-box">
+      <div>
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:2px">钱包状态</div>
+        <div class="wallet-address" id="walletStatus">未连接</div>
+      </div>
+      <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">连接钱包</button>
+    </div>
+    
     <div class="title">🔥 踏马封神 燃烧分红</div>
-    <div class="subtitle">Burn To Earn | 燃烧获取分红权</div>
+    <div class="subtitle">Burn To Earn | 燃烧TAMA获取BNB分红</div>
 
+    <div class="panel">
+      <div class="label">我的TAMA余额</div>
+      <div class="value highlight" id="tokenBalance">0.00 TAMA</div>
+    </div>
+    
     <div class="panel">
       <div class="label">我的可领取分红</div>
       <div class="value" id="pending">0.00 BNB</div>
     </div>
+    
     <div class="panel">
       <div class="label">我已燃烧</div>
       <div class="value" id="myburn">0 TAMA</div>
     </div>
+    
     <div class="panel">
       <div class="label">全网总燃烧</div>
       <div class="value" id="totalburn">0 TAMA</div>
     </div>
 
-    <div class="input-box">
-      <input id="amount" type="number" placeholder="输入燃烧数量" min="0"/>
+    <div class="status-box" id="statusBox"></div>
+
+    <div class="input-box" style="margin-top:16px">
+      <input id="amount" type="number" placeholder="输入燃烧数量 (TAMA)" min="0" step="0.01"/>
     </div>
 
-    <button class="btn-burn" onclick="burn()">🔥 立即燃烧</button>
-    <button class="btn-claim" onclick="claim()">💰 领取分红</button>
+    <!-- 授权按钮（初始隐藏，需要时显示） -->
+    <button class="btn-approve" id="approveBtn" onclick="approveToken()" style="display:none">🔓 授权合约</button>
+    
+    <button class="btn-burn" id="burnBtn" onclick="burn()" disabled>🔥 立即燃烧</button>
+    <button class="btn-claim" id="claimBtn" onclick="claim()" disabled>💰 领取分红</button>
+    
+    <div style="margin-top:12px;font-size:12px;color:#6b7280;text-align:center">
+      合约地址: <span style="font-family:monospace" id="contractAddrDisplay">0x9a88...7777</span>
+    </div>
   </div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/web3@1.10.3/dist/web3.min.js"></script>
 <script>
-const CONTRACT = "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777";
+// ==================== 合约配置区域 ====================
+const CONFIG = {
+  // 合约地址（踏马封神合约）
+  contractAddress: "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777",
+  
+  // 代币合约地址（如果TAMA代币和燃烧合约是同一个，就填一样的）
+  tokenAddress: "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777",
+  
+  // 网络配置（BSC主网）
+  chainId: 56,
+  chainName: "Binance Smart Chain",
+  rpcUrl: "https://bsc-dataseed.binance.org/",
+  
+  // 代币精度（通常是18）
+  decimals: 18
+};
 
+// ==================== 完整ABI接口 ====================
+// 包含ERC20标准接口 + 项目特定接口
 const ABI = [
-  {"inputs":[{"name":"amount","type":"uint256"}],"name":"burn","stateMutability":"nonpayable","type":"function"},
-  {"inputs":[],"name":"claim","stateMutability":"nonpayable","type":"function"},
-  {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[],"name":"totalBurned","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"}
+  // === ERC20 标准接口 ===
+  {
+    "constant": true,
+   [{"inputs":[{"components":[{"internalType":"address","name":"PCS_V2_FACTORY","type":"address"},{"internalType":"bytes32","name":"PCS_V2_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"PCS_V2_ROUTER","type":"address"},{"internalType":"address","name":"PCS_SMART_ROUTER","type":"address"},{"internalType":"address","name":"WETH","type":"address"},{"internalType":"address","name":"PCS_V3_FACTORY","type":"address"},{"internalType":"bytes32","name":"PCS_V3_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"UNI_V2_FACTORY","type":"address"},{"internalType":"bytes32","name":"UNI_V2_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"UNI_V3_FACTORY","type":"address"},{"internalType":"bytes32","name":"UNI_V3_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"PCS_V4_VAULT","type":"address"},{"internalType":"address","name":"UNI_V4_POOL","type":"address"},{"internalType":"uint256","name":"MIN_LIQ_THRESHOLD","type":"uint256"},{"internalType":"uint256","name":"START_LIQ_THRESHOLD","type":"uint256"},{"internalType":"uint256","name":"ANTI_FARMER_DURATION","type":"uint256"}],"internalType":"struct FlapTaxToken.ConstructorParams","name":"params","type":"tuple"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[],"name":"EIP712DomainChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"quoteToken","type":"address"},{"indexed":false,"internalType":"uint256","name":"taxAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"outputAmount","type":"uint256"}],"name":"FlapTaxLiquidationSuccess","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"version","type":"uint8"}],"name":"Initialized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"fromState","type":"uint8"},{"indexed":false,"internalType":"uint8","name":"toState","type":"uint8"}],"name":"PoolStateChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"reason","type":"bytes"}],"name":"TaxLiquidationError","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"from","type":"address"},{"indexed":false,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"TransferFlapToken","type":"event"},{"inputs":[],"name":"ANTI_FARMER_DURATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DOMAIN_SEPARATOR","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MIN_LIQ_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"QUOTE_TOKEN","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"START_LIQ_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TAX_DURATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"antiFarmerExpirationTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"eip712Domain","outputs":[{"internalType":"bytes1","name":"fields","type":"bytes1"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"version","type":"string"},{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"address","name":"verifyingContract","type":"address"},{"internalType":"bytes32","name":"salt","type":"bytes32"},{"internalType":"uint256[]","name":"extensions","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"finalizeMigration","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"string","name":"meta","type":"string"},{"internalType":"uint16","name":"tax","type":"uint16"},{"internalType":"address","name":"taxSplitter","type":"address"},{"internalType":"address","name":"quoteToken","type":"address"},{"internalType":"uint256","name":"liqExpectedOutputAmount","type":"uint256"},{"internalType":"uint256","name":"taxDuration","type":"uint256"}],"internalType":"struct IFlapTaxToken.InitParams","name":"params","type":"tuple"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"liqExpectedOutputAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"liquidationThreshold","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mainPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"metaURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"permit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pools","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"startMigration","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"state","outputs":[{"internalType":"enum FlapTaxToken.PoolState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxExpirationTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxRate","outputs":[{"internalType":"uint16","name":"","type":"uint16"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxSplitter","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+    "name": "balanceOf",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [{"name": "owner", "type": "address"}, {"name": "spender", "type": "address"}],
+    "name": "allowance",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [{"name": "spender", "type": "address"}, {"name": "amount", "type": "uint256"}],
+    "name": "approve",
+    "outputs": [{"name": "", "type": "bool"}],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "totalSupply",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [{"name": "", "type": "uint8"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [{"name": "", "type": "string"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "name",
+    "outputs": [{"name": "", "type": "string"}],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  
+  // === 踏马封神特定接口 ===
+  // 燃烧代币
+  {
+    "inputs": [{"name": "amount", "type": "uint256"}],
+    "name": "burn",
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  // 领取分红
+  {
+    "inputs": [],
+    "name": "claim",
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  // 查询可领取分红
+  {
+    "inputs": [{"name": "user", "type": "address"}],
+    "name": "claimable",
+    "outputs": [{"type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // 查询用户已燃烧数量
+  {
+    "inputs": [{"name": "user", "type": "address"}],
+    "name": "burnAmount",
+    "outputs": [{"type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  // 查询全网总燃烧
+  {
+    "inputs": [],
+    "name": "totalBurned",
+    "outputs": [{"type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  
+  // === 事件日志 ===
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "from", "type": "address"},
+      {"indexed": false, "name": "amount", "type": "uint256"}
+    ],
+    "name": "Burn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {"indexed": true, "name": "user", "type": "address"},
+      {"indexed": false, "name": "amount", "type": "uint256"}
+    ],
+    "name": "Claim",
+    "type": "event"
+  }
 ];
 
-async function connect(){
-  await ethereum.request({method:"eth_requestAccounts"});
-  const web3 = new Web3(ethereum);
-  const account = (await web3.eth.getAccounts())[0];
-  const c = new web3.eth.Contract(ABI, CONTRACT);
-  return {web3, account, c};
+// ==================== 全局状态 ====================
+let web3 = null;
+let contract = null;
+let tokenContract = null; // 如果是同一个合约，这个和contract一样
+let userAddress = null;
+let isConnected = false;
+
+// ==================== 核心功能 ====================
+
+// 显示状态信息
+function showStatus(msg, isError = false) {
+  const box = document.getElementById('statusBox');
+  box.textContent = msg;
+  box.className = 'status-box show' + (isError ? ' error' : '');
+  setTimeout(() => {
+    box.classList.remove('show');
+  }, 5000);
 }
 
-async function burn(){
+// 连接钱包
+async function connectWallet() {
+  const btn = document.getElementById('connectBtn');
+  
+  try {
+    if (!window.ethereum) {
+      alert('请安装MetaMask钱包！');
+      return;
+    }
+    
+    btn.innerHTML = '<span class="loading"></span>连接中...';
+    
+    // 请求连接
+    await ethereum.request({ method: 'eth_requestAccounts' });
+    
+    // 初始化web3
+    web3 = new Web3(ethereum);
+    
+    // 检查网络
+    const chainId = await web3.eth.getChainId();
+    if (chainId !== CONFIG.chainId) {
+      try {
+        await ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x' + CONFIG.chainId.toString(16) }],
+        });
+      } catch (switchError) {
+        // 如果网络不存在，添加网络
+        if (switchError.code === 4902) {
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x' + CONFIG.chainId.toString(16),
+              chainName: CONFIG.chainName,
+              nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+              rpcUrls: [CONFIG.rpcUrl],
+              blockExplorerUrls: ['https://bscscan.com/']
+            }],
+          });
+        } else {
+          throw switchError;
+        }
+      }
+      // 重新初始化web3
+      web3 = new Web3(ethereum);
+    }
+    
+    // 获取账户
+    const accounts = await web3.eth.getAccounts();
+    userAddress = accounts[0];
+    isConnected = true;
+    
+    // 初始化合约
+    contract = new web3.eth.Contract(ABI, CONFIG.contractAddress);
+    tokenContract = contract; // 如果是同一个合约
+    
+    // 更新UI
+    document.getElementById('walletStatus').textContent = 
+      userAddress.slice(0,6) + '...' + userAddress.slice(-4);
+    btn.textContent = '已连接';
+    btn.disabled = true;
+    
+    document.getElementById('burnBtn').disabled = false;
+    document.getElementById('claimBtn').disabled = false;
+    
+    // 加载数据
+    await loadUserData();
+    
+    // 监听账户变化
+    ethereum.on('accountsChanged', (accounts) => {
+      if (accounts.length === 0) {
+        window.location.reload();
+      } else {
+        userAddress = accounts[0];
+        document.getElementById('walletStatus').textContent = 
+          userAddress.slice(0,6) + '...' + userAddress.slice(-4);
+        loadUserData();
+      }
+    });
+    
+    showStatus('钱包连接成功！');
+    
+  } catch (error) {
+    console.error(error);
+    btn.textContent = '连接失败';
+    showStatus('连接失败: ' + error.message, true);
+    setTimeout(() => {
+      btn.textContent = '连接钱包';
+    }, 2000);
+  }
+}
+
+// 加载用户数据（余额、分红等）
+async function loadUserData() {
+  if (!contract || !userAddress) return;
+  
+  try {
+    // 1. 查询TAMA代币余额
+    const balance = await contract.methods.balanceOf(userAddress).call();
+    const balanceFormatted = web3.utils.fromWei(balance, 'ether');
+    document.getElementById('tokenBalance').textContent = 
+      parseFloat(balanceFormatted).toFixed(2) + ' TAMA';
+    
+    // 2. 查询可领取分红（BNB）
+    const claimable = await contract.methods.claimable(userAddress).call();
+    const claimableFormatted = web3.utils.fromWei(claimable, 'ether');
+    document.getElementById('pending').textContent = 
+      parseFloat(claimableFormatted).toFixed(4) + ' BNB';
+    
+    // 3. 查询我已燃烧数量
+    const myBurn = await contract.methods.burnAmount(userAddress).call();
+    const myBurnFormatted = web3.utils.fromWei(myBurn, 'ether');
+    document.getElementById('myburn').textContent = 
+      parseFloat(myBurnFormatted).toFixed(2) + ' TAMA';
+    
+    // 4. 查询全网总燃烧
+    const totalBurn = await contract.methods.totalBurned().call();
+    const totalBurnFormatted = web3.utils.fromWei(totalBurn, 'ether');
+    document.getElementById('totalburn').textContent = 
+      parseFloat(totalBurnFormatted).toLocaleString() + ' TAMA';
+    
+    // 5. 检查授权状态（是否需要先授权）
+    await checkAllowance();
+    
+  } catch (error) {
+    console.error('加载数据失败:', error);
+    showStatus('加载数据失败，请刷新重试', true);
+  }
+}
+
+// 检查授权额度
+async function checkAllowance() {
+  try {
+    const allowance = await contract.methods.allowance(userAddress, CONFIG.contractAddress).call();
+    const allowanceFormatted = parseFloat(web3.utils.fromWei(allowance, 'ether'));
+    
+    // 如果授权额度很小，显示授权按钮
+    if (allowanceFormatted < 1000000) { // 小于100万视为未授权
+      document.getElementById('approveBtn').style.display = 'block';
+      document.getElementById('burnBtn').disabled = true;
+      document.getElementById('burnBtn').textContent = '请先授权';
+    } else {
+      document.getElementById('approveBtn').style.display = 'none';
+      document.getElementById('burnBtn').disabled = false;
+      document.getElementById('burnBtn').textContent = '🔥 立即燃烧';
+    }
+  } catch (e) {
+    console.log('检查授权失败:', e);
+  }
+}
+
+// 授权代币给合约
+async function approveToken() {
+  if (!isConnected) {
+    alert('请先连接钱包');
+    return;
+  }
+  
+  const btn = document.getElementById('approveBtn');
+  const originalText = btn.textContent;
+  
+  try {
+    btn.innerHTML = '<span class="loading"></span>授权中...';
+    btn.disabled = true;
+    
+    // 授权最大值
+    const maxAmount = web3.utils.toWei('999999999999', 'ether');
+    
+    const tx = await contract.methods.approve(CONFIG.contractAddress, maxAmount)
+      .send({ from: userAddress });
+    
+    showStatus('授权成功！现在可以燃烧了');
+    await checkAllowance(); // 刷新按钮状态
+    
+  } catch (error) {
+    console.error(error);
+    showStatus('授权失败: ' + error.message, true);
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+// 燃烧代币
+async function burn() {
   const amt = document.getElementById("amount").value;
-  if(!amt || amt <= 0) return alert("请输入燃烧数量");
-  const {account, c, web3} = await connect();
-  const val = web3.utils.toWei(amt, "ether");
-  c.methods.burn(val).send({from:account})
-    .on("transactionHash",h=>alert("提交成功："+h))
-    .on("receipt",()=>alert("✅ 燃烧成功！获得分红权"))
+  if (!amt || parseFloat(amt) <= 0) {
+    showStatus("请输入燃烧数量", true);
+    return;
+  }
+  
+  const btn = document.getElementById("burnBtn");
+  
+  try {
+    btn.innerHTML = '<span class="loading"></span>提交中...';
+    btn.disabled = true;
+    
+    const val = web3.utils.toWei(amt, "ether");
+    
+    const tx = await contract.methods.burn(val).send({ from: userAddress });
+    
+    showStatus("✅ 燃烧成功！获得分红权");
+    document.getElementById("amount").value = "";
+    
+    // 刷新数据
+    await loadUserData();
+    
+  } catch (error) {
+    console.error(error);
+    showStatus("燃烧失败: " + error.message, true);
+  } finally {
+    btn.textContent = "🔥 立即燃烧";
+    btn.disabled = false;
+  }
 }
 
-async function claim(){
-  const {account, c} = await connect();
-  c.methods.claim().send({from:account})
-    .on("transactionHash",h=>alert("提交成功："+h))
-    .on("receipt",()=>alert("✅ 分红领取成功"))
+// 领取分红
+async function claim() {
+  const btn = document.getElementById("claimBtn");
+  
+  try {
+    btn.innerHTML = '<span class="loading"></span>领取中...';
+    btn.disabled = true;
+    
+    const tx = await contract.methods.claim().send({ from: userAddress });
+    
+    showStatus("✅ 分红领取成功！");
+    
+    // 刷新数据
+    await loadUserData();
+    
+  } catch (error) {
+    console.error(error);
+    showStatus("领取失败: " + error.message, true);
+  } finally {
+    btn.textContent = "💰 领取分红";
+    btn.disabled = false;
+  }
 }
+
+// 自动刷新数据（每30秒）
+setInterval(() => {
+  if (isConnected) {
+    loadUserData();
+  }
+}, 30000);
+
+// 页面加载完成后显示合约地址
+document.getElementById('contractAddrDisplay').textContent = 
+  CONFIG.contractAddress.slice(0,6) + '...' + CONFIG.contractAddress.slice(-4);
 </script>
 </body>
 </html>
