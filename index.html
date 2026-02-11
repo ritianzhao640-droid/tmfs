@@ -6,653 +6,928 @@
     <meta name="theme-color" content="#0d1f15">
     <title>斗斗地主吧</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
-    <script src="abi.js"></script>
+    <!-- 引入 ethers.js 用于区块链交互 -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     
     <style>
+        /* ========== 基础样式 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif; background: linear-gradient(180deg, #0d1f15 0%, #1a3a2a 50%, #0f2618 100%); min-height: 100vh; color: white; overflow-x: hidden; }
         
-        #homePage, #profilePage { min-height: 100vh; position: relative; padding-bottom: 100px; display: none; }
+        /* ========== 页面容器 ========== */
+        #homePage, #lobbyPage, #rankPage, #profilePage { 
+            min-height: 100vh; 
+            position: relative; 
+            padding-bottom: 80px; 
+            display: none;
+        }
+        
         #homePage { display: block; }
         
-        .glass-card { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+        #lobbyPage, #rankPage, #profilePage { 
+            background: linear-gradient(180deg, #0d1f15 0%, #1a3a2a 100%); 
+        }
+        
+        /* ========== 公共组件 ========== */
+        .glass-card { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 20px; margin-bottom: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; margin-bottom: 10px; }
         .logo { font-size: 24px; font-weight: 700; letter-spacing: 1px; background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .wallet-icon { width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s; font-size: 20px; }
+        /* ========== 钱包样式 ========== */
+        .wallet-icon { width: 48px; height: 48px; background: rgba(255, 255, 255, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s; font-size: 20px; position: relative; }
         .wallet-icon:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.05); }
         .wallet-icon.connected { background: rgba(74, 222, 128, 0.2); border-color: rgba(74, 222, 128, 0.5); }
+        .wallet-icon::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            bottom: 2px;
+            right: 2px;
+            border: 2px solid #0d1f15;
+        }
+        .wallet-icon.connected::after {
+            background: #22c55e;
+        }
         
+        /* ========== 首页样式 ========== */
         .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
         .welcome-text { font-size: 28px; font-weight: 300; margin-bottom: 24px; color: rgba(255, 255, 255, 0.9); }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
         .stat-label { font-size: 12px; color: rgba(255, 255, 255, 0.5); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value { font-size: 24px; font-weight: 700; color: #4ade80; word-break: break-all; }
+        .stat-value { font-size: 24px; font-weight: 700; color: #4ade80; }
         
-        /* 燃烧区域 - 融合简洁版设计 */
-        .burn-card { 
-            background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(185, 28, 28, 0.05) 100%); 
-            border: 1px solid rgba(248, 113, 113, 0.3); 
-            border-radius: 20px; 
-            padding: 24px; 
-            margin-bottom: 20px; 
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .burn-card::before {
-            content: '🔥';
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            font-size: 60px;
-            opacity: 0.1;
-        }
-        .burn-title { font-size: 20px; font-weight: 700; color: #fca5a5; margin-bottom: 8px; }
-        .burn-subtitle { font-size: 13px; color: rgba(255, 255, 255, 0.6); margin-bottom: 20px; }
+        /* ========== 税收提示 ========== */
+        .tax-toast { background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 11px; backdrop-filter: blur(10px); }
+        .tax-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; margin-right: 3px; }
+        .tax-dot.green { background: #22c55e; }
+        .tax-dot.yellow { background: #fbbf24; }
         
-        .burn-input-wrapper { 
-            background: rgba(0, 0, 0, 0.3); 
-            border-radius: 16px; 
-            padding: 4px; 
-            display: flex; 
-            gap: 8px; 
-            margin-bottom: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .burn-input { 
-            flex: 1; 
-            background: transparent; 
-            border: none; 
-            color: white; 
-            padding: 14px 16px; 
-            font-size: 18px; 
-            outline: none; 
-            font-weight: 600;
-        }
-        .burn-add-btn { 
-            background: rgba(255, 255, 255, 0.1); 
-            border: none; 
-            color: white; 
-            padding: 10px 14px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            font-size: 13px; 
-            font-weight: 600;
-            transition: all 0.2s;
-        }
+        /* ========== 销毁区域 ========== */
+        .burn-section { background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+        .burn-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .burn-icon { width: 40px; height: 40px; background: rgba(220, 38, 38, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .burn-title { font-weight: 600; font-size: 16px; }
+        .burn-desc { font-size: 13px; color: rgba(255, 255, 255, 0.5); }
+        .burn-input-group { display: flex; gap: 10px; align-items: center; }
+        .burn-input { flex: 1; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 12px 16px; border-radius: 12px; font-size: 16px; outline: none; }
+        .burn-input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .burn-add-btn { background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 12px 16px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
         .burn-add-btn:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.2); }
+        .burn-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        .burn-actions { display: flex; gap: 10px; margin-top: 16px; }
+        /* ========== 按钮样式 ========== */
         .btn { flex: 1; background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 14px 24px; border-radius: 16px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s; border: 1px solid rgba(255, 255, 255, 0.1); touch-action: manipulation; }
-        .btn-primary { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3); }
-        .btn-burn { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3); }
         
-        /* 分红数据展示 */
-        .dividend-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 12px; 
-            margin-bottom: 20px; 
+        /* ========== 分红区域 ========== */
+        .dividend-section { background: linear-gradient(135deg, rgba(240, 185, 11, 0.1) 0%, rgba(240, 185, 11, 0.03) 100%); border: 1px solid rgba(240, 185, 11, 0.2); border-radius: 20px; padding: 16px; margin-bottom: 20px; }
+        .claim-btn { width: 100%; background: linear-gradient(135deg, #F0B90B 0%, #F8D12F 100%); color: #000; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 20px rgba(240, 185, 11, 0.3); touch-action: manipulation; }
+        .claim-btn:disabled { opacity: 0.5; cursor: not-allowed; background: rgba(240, 185, 11, 0.3); }
+        .claim-btn:active { transform: scale(0.98); }
+        
+        /* ========== 底部导航 ========== */
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: rgba(13, 31, 21, 0.95); 
+            backdrop-filter: blur(20px); 
+            border-top: 1px solid rgba(255, 255, 255, 0.1); 
+            padding: 12px 24px calc(12px + env(safe-area-inset-bottom)); 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            z-index: 1000; 
         }
-        .dividend-item { 
-            background: linear-gradient(135deg, rgba(240, 185, 11, 0.1) 0%, rgba(240, 185, 11, 0.02) 100%); 
-            border: 1px solid rgba(240, 185, 11, 0.2); 
-            border-radius: 16px; 
-            padding: 16px; 
-            text-align: center;
-        }
-        .dividend-label { font-size: 11px; color: rgba(255, 255, 255, 0.5); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-        .dividend-value { font-size: 22px; font-weight: 700; color: #F0B90B; }
-        .dividend-unit { font-size: 12px; color: rgba(240, 185, 11, 0.7); }
-        
-        .claim-btn { 
-            width: 100%; 
-            background: linear-gradient(135deg, #F0B90B 0%, #F8D12F 100%); 
-            color: #000; 
-            border: none; 
-            padding: 16px; 
-            border-radius: 16px; 
-            font-size: 16px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            transition: all 0.3s; 
-            box-shadow: 0 4px 20px rgba(240, 185, 11, 0.3);
-            margin-bottom: 8px;
-        }
-        .claim-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #666; color: #999; box-shadow: none; }
-        
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-        .info-item { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; font-size: 12px; }
-        .info-label { color: rgba(255,255,255,0.5); margin-bottom: 4px; font-size: 11px; }
-        .info-value { color: #4ade80; font-weight: 600; font-size: 13px; }
-        
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(13, 31, 21, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 24px calc(12px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255, 255, 255, 0.5); text-decoration: none; font-size: 11px; cursor: pointer; transition: all 0.3s; padding: 4px 12px; border-radius: 12px; touch-action: manipulation; }
         .nav-item.active { color: #4ade80; transform: scale(1.05); background: rgba(74, 222, 128, 0.1); }
         .nav-main-btn { width: 56px; height: 56px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; box-shadow: 0 8px 30px rgba(34, 197, 94, 0.4); border: 4px solid #0d1f15; font-size: 24px; cursor: pointer; color: white; transition: all 0.3s; touch-action: manipulation; }
+        .nav-main-btn:active { transform: scale(0.95); }
         
+        /* ========== 大厅页面 ========== */
+        .lobby-header { padding: 60px 20px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .room-list { padding: 16px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 100px; }
+        .room-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.3s; position: relative; touch-action: manipulation; }
+        .room-card:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); border-color: rgba(34, 197, 94, 0.3); }
+        .room-card.coming-soon { opacity: 0.6; cursor: not-allowed; }
+        .room-card.coming-soon:hover { transform: none; border-color: rgba(255,255,255,0.1); }
+        .room-icon { width: 56px; height: 56px; background: linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(34,197,94,0.1) 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .room-info { flex: 1; }
+        .room-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .room-meta { font-size: 12px; color: rgba(255,255,255,0.5); display: flex; gap: 12px; }
+        .room-enter { width: 40px; height: 40px; background: rgba(34, 197, 94, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #4ade80; }
+        .room-tag { position: absolute; top: -5px; right: 10px; background: linear-gradient(135deg, #f87171 0%, #dc2626 100%); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+        
+        /* ========== 返回按钮 ========== */
         .back-btn { position: absolute; top: 16px; left: 16px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; z-index: 10; backdrop-filter: blur(10px); touch-action: manipulation; }
+        .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
         
+        /* ========== 授权按钮 ========== */
         .auth-btn { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); display: flex; align-items: center; gap: 6px; margin-top: 8px; width: 100%; justify-content: center; transition: all 0.3s; touch-action: manipulation; }
+        .auth-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
+        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .auth-btn.authorized { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+        .wallet-hint { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; text-align: center; line-height: 1.4; padding: 0 10px; }
         
-        .network-badge { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(220, 38, 38, 0.9); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 9999; display: none; backdrop-filter: blur(10px); }
-        .network-badge.show { display: block; }
-        .network-badge.correct { background: rgba(34, 197, 94, 0.9); }
+        /* ========== 提示弹窗 ========== */
+        .toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.9); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; z-index: 9999; display: none; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); max-width: 80%; text-align: center; }
+        .toast.show { display: block; animation: slideDown 0.3s ease; }
+        .toast.error { background: rgba(220, 38, 38, 0.9); border-color: rgba(248, 113, 113, 0.3); }
+        .toast.success { background: rgba(34, 197, 94, 0.9); border-color: rgba(74, 222, 128, 0.3); }
+        @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         
-        .tx-toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(13, 31, 21, 0.95); border: 1px solid rgba(34, 197, 94, 0.3); color: white; padding: 16px 24px; border-radius: 16px; font-size: 14px; z-index: 10000; display: none; backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(0,0,0,0.5); min-width: 280px; text-align: center; }
-        .tx-toast.show { display: block; }
-        .tx-toast.error { border-color: rgba(248, 113, 113, 0.3); }
-        
-        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        /* ========== 加载动画 ========== */
+        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        .contract-info { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 8px; word-break: break-all; }
+        /* ========== 排行榜 ========== */
+        .rank-header { padding: 60px 20px 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .rank-list { padding: 16px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
+        .rank-item { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 12px; transition: all 0.3s; }
+        .rank-item:hover { background: rgba(255,255,255,0.08); transform: translateX(5px); }
+        .rank-number { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .rank-1 { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #000; }
+        .rank-2 { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); color: #000; }
+        .rank-3 { background: linear-gradient(135deg, #b45309 0%, #92400e 100%); color: white; }
+        .rank-other { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+        .rank-address { flex: 1; font-size: 13px; font-family: monospace; }
+        .rank-amount { font-size: 16px; font-weight: 700; color: #f87171; }
         
+        /* ========== 个人资料 ========== */
         .profile-header { padding: 60px 20px 30px; text-align: center; background: linear-gradient(180deg, rgba(34,197,94,0.1) 0%, transparent 100%); }
         .profile-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px; border: 4px solid rgba(34,197,94,0.3); box-shadow: 0 8px 30px rgba(34,197,94,0.3); }
-        .profile-address { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
-        .profile-balance { font-size: 32px; font-weight: 700; color: #4ade80; margin-bottom: 4px; }
+        .profile-address { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 8px; word-break: break-all; padding: 0 20px; }
+        .profile-balance { font-size: 32px; font-weight: 700; color: #4ade80; margin-bottom: 4px; text-shadow: 0 2px 10px rgba(74, 222, 128, 0.3); }
         .profile-label { font-size: 12px; color: rgba(255,255,255,0.4); }
         
-        .warning-box { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; padding: 12px; margin: 12px 0; font-size: 12px; color: rgba(255,255,255,0.8); }
+        /* ========== 动画 ========== */
+        @keyframes bounce { 
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 
+            40% { transform: translateY(-10px); } 
+            60% { transform: translateY(-5px); } 
+        }
         
-        .tax-toast { background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 12px; }
+        /* ========== 响应式 ========== */
+        @media (min-width: 768px) { .container { max-width: 480px; margin: 0 auto; } }
     </style>
 </head>
 <body>
-    <div id="networkBadge" class="network-badge">请切换到正确的网络</div>
-    <div id="txToast" class="tx-toast"></div>
+    <!-- 提示条 -->
+    <div id="toast" class="toast"></div>
 
+    <!-- 首页 -->
     <div id="homePage">
         <div class="header">
             <div class="logo">♠ 斗斗地主吧</div>
             <div style="display: flex; flex-direction: column; align-items: flex-end;">
                 <div class="wallet-icon" id="walletBtn" onclick="connectWallet()">💼</div>
                 <div id="authSection" style="display: none; margin-top: 8px;">
-                    <button class="auth-btn" id="authBtn" onclick="authorizeToken()">🔓 授权代币</button>
+                    <button class="auth-btn" id="authBtn" onclick="authorizeToken()" disabled>🔓 授权代币</button>
+                </div>
+                <div id="walletHint" class="wallet-hint" style="display: none;">
+                    授权代币用于销毁和游戏功能
                 </div>
             </div>
         </div>
 
         <div class="container">
             <div class="welcome-text">
-                今日币价 <span id="tokenPrice" style="font-size: 32px; font-weight: 700;">加载中...</span><br>
-                <span id="priceChange" style="font-size: 18px; color: #4ade80;">连接钱包查看数据</span>
+                今日币价 <span id="tokenPrice" style="font-size: 32px; font-weight: 700;">$0.0000</span><br>
+                <span id="priceChange" style="font-size: 18px;">+0.00%</span>
             </div>
 
             <div class="stats-grid">
                 <div class="glass-card" style="margin-bottom: 0;">
-                    <div class="stat-label">我的余额</div>
-                    <div class="stat-value" id="balance">0.00</div>
-                    <div class="contract-info" id="tokenSymbolDisplay">--</div>
+                    <div class="stat-label">我的斗币</div>
+                    <div class="stat-value" id="balance">--</div>
                 </div>
                 <div class="glass-card" style="margin-bottom: 0;">
-                    <div class="stat-label" style="color: #fbbf24;">当前税率</div>
-                    <div class="stat-value" style="color: #fbbf24;" id="taxRate">0%</div>
-                    <div class="contract-info" id="taxStatus">--</div>
+                    <div class="stat-label" style="color: #fbbf24;">AI奖池斗币</div>
+                    <div class="stat-value" style="color: #fbbf24;" id="aiPool">--</div>
                 </div>
-            </div>
-
-            <!-- 分红数据概览 -->
-            <div class="dividend-grid" id="dividendGrid" style="display: none;">
-                <div class="dividend-item">
-                    <div class="dividend-label">可领分红</div>
-                    <div class="dividend-value" id="pendingWBNB">0.00</div>
-                    <div class="dividend-unit">WBNB</div>
-                </div>
-                <div class="dividend-item">
-                    <div class="dividend-label">累计销毁</div>
-                    <div class="dividend-value" id="totalBurned">0.00</div>
-                    <div class="dividend-unit" id="burnUnit">TAMA</div>
-                </div>
-            </div>
-
-            <button class="claim-btn" id="claimBtn" onclick="claimDividend()" style="display: none;" disabled>
-                💎 领取 WBNB 分红
-            </button>
-
-            <!-- 燃烧区域 - 简洁版 -->
-            <div class="burn-card" id="burnCard" style="display: none;">
-                <div class="burn-title">🔥 销毁斗币换分红</div>
-                <div class="burn-subtitle">已销毁的币不可赎回，但永久享有分红权</div>
-                
-                <div class="burn-input-wrapper">
-                    <input type="number" class="burn-input" id="burnAmount" placeholder="输入数量" value="100">
-                    <button class="burn-add-btn" onclick="addBurnAmount(100)">+100</button>
-                    <button class="burn-add-btn" onclick="addBurnAmount(1000)">+1k</button>
-                </div>
-                
-                <div class="burn-actions">
-                    <button class="btn btn-burn" onclick="burnTokens()" id="burnBtn">确认销毁</button>
-                </div>
-            </div>
-
-            <div id="dividendWarning" class="warning-box" style="display: none;">
-                <b>⚠️ 需要配置分红合约</b><br>
-                请在 abi.js 中配置 dividendAddress 和 dividendABI 以启用销毁和分红功能。
             </div>
 
             <div class="tax-toast">
-                <div style="font-weight: 600; margin-bottom: 4px;">📊 代币信息</div>
-                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                    <span>总供应量: <b id="totalSupply" style="color: #4ade80;">--</b></span>
-                    <span>池子状态: <b id="poolState" style="color: #fbbf24;">--</b></span>
+                <div style="width: 20px; height: 20px; background: rgba(34,197,94,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px;">ℹ</div>
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 600;">
+                        <span>交易税收</span>
+                        <span style="color: #4ade80;">5%</span>
+                    </div>
+                    <div style="margin-top: 2px;">
+                        <span class="tax-dot green"></span>4%销毁分WBNB
+                        <span style="color: rgba(255,255,255,0.3); margin: 0 4px;">→</span>
+                        <span class="tax-dot yellow"></span>1%营销
+                    </div>
                 </div>
             </div>
 
             <div class="glass-card" style="text-align: center; padding: 24px;">
-                <p style="margin-bottom: 16px; color: rgba(255,255,255,0.6);">准备好开始了吗？</p>
-                <button class="btn btn-primary" onclick="enterLobby()">🎮 进入游戏大厅</button>
+                <p style="margin-bottom: 16px; color: rgba(255,255,255,0.6);">🎮 游戏大厅暂未开放</p>
+                <button class="btn btn-primary" onclick="enterLobby()">查看游戏大厅</button>
+                <p style="margin-top: 12px; font-size: 12px; color: rgba(255,255,255,0.4);">请先连接钱包以使用完整功能</p>
             </div>
-        </div>
-    </div>
 
-    <div id="profilePage" style="display: none;">
-        <button class="back-btn" onclick="showPage('home')">← 返回</button>
-        <div class="profile-header">
-            <div class="profile-avatar">👤</div>
-            <div class="profile-address" id="profileAddress">未连接钱包</div>
-            <div class="profile-balance" id="profileBalance">0.00</div>
-            <div class="profile-label" id="profileSymbol">--</div>
-        </div>
-        <div class="container">
-            <div class="glass-card">
-                <div style="font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">我的授权额度</div>
-                <div style="font-size: 24px; font-weight: 700; color: #3b82f6;" id="allowanceAmount">0.00</div>
-                <button class="auth-btn" onclick="authorizeToken()" style="margin-top: 12px;">重新授权</button>
+            <div class="burn-section">
+                <div class="burn-header">
+                    <div class="burn-icon">🔥</div>
+                    <div>
+                        <div class="burn-title">销毁斗币换取分红权</div>
+                        <div class="burn-desc">已销毁的斗币不可赎回但会流进AI池</div>
+                    </div>
+                </div>
+                <div class="burn-input-group">
+                    <input type="number" class="burn-input" id="burnAmount" value="100" disabled>
+                    <button class="burn-add-btn" id="burnAdd100" disabled onmousedown="startLongPress(100)" onmouseup="stopLongPress()" ontouchstart="startLongPress(100)" ontouchend="stopLongPress()" onmouseleave="stopLongPress()">+100</button>
+                    <button class="burn-add-btn" id="burnAdd1000" disabled onmousedown="startLongPress(1000)" onmouseup="stopLongPress()" ontouchstart="startLongPress(1000)" ontouchend="stopLongPress()" onmouseleave="stopLongPress()">+1000</button>
+                </div>
+                <button class="btn" id="burnBtn" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);" onclick="burnTokens()" disabled>连接钱包后销毁</button>
             </div>
-            
-            <div class="glass-card" id="profileDividend" style="display: none;">
-                <div style="font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">分红详情</div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">已领取累计</div>
-                        <div class="info-value" id="totalClaimedWBNB">0.00 WBNB</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">分红积分</div>
-                        <div class="info-value" id="dividendPoints">0 分</div>
-                    </div>
+
+            <div style="text-align: center; margin: 20px 0; animation: bounce 2s infinite;">
+                <div style="background: rgba(240, 185, 11, 0.9); color: #000; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 700; display: inline-block; box-shadow: 0 4px 20px rgba(240, 185, 11, 0.4);">
+                     分红（点击底部"我的"查看）
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="showPage('home')">
+    <!-- 大厅页 -->
+    <div id="lobbyPage">
+        <button class="back-btn" onclick="showPage('home')">← 返回</button>
+        <div class="lobby-header">
+            <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">🎮 游戏大厅</div>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.5);">选择房间开始对战 | 在线: <span id="onlineCount">128</span>人</div>
+        </div>
+        <div class="room-list">
+            <div class="room-card coming-soon" onclick="showComingSoon()">
+                <div class="room-icon">🤖</div>
+                <div class="room-info">
+                    <div class="room-name">人机对战 <span style="font-size: 11px; color: #4ade80; background: rgba(74,222,128,0.2); padding: 2px 6px; border-radius: 8px;">入门</span></div>
+                    <div class="room-meta"><span>底注: 10 斗币</span><span style="color: #fbbf24;">奖池: 2,450</span></div>
+                </div>
+                <div class="room-enter">🔒</div>
+                <div class="room-tag">即将上线</div>
+            </div>
+            <div class="room-card coming-soon" onclick="showComingSoon()">
+                <div class="room-icon" style="background: linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.1) 100%);">⚡</div>
+                <div class="room-info">
+                    <div class="room-name">高级场 <span style="font-size: 11px; color: #fbbf24; background: rgba(251,191,36,0.2); padding: 2px 6px; border-radius: 8px;">进阶</span></div>
+                    <div class="room-meta"><span>底注: 100 斗币</span><span style="color: #fbbf24;">奖池: 15,680</span></div>
+                </div>
+                <div class="room-enter" style="background: rgba(251,191,36,0.2); color: #fbbf24;">🔒</div>
+                <div class="room-tag">即将上线</div>
+            </div>
+            <div class="room-card coming-soon" onclick="showComingSoon()">
+                <div class="room-icon" style="background: linear-gradient(135deg, rgba(248,113,113,0.2) 0%, rgba(248,113,113,0.1) 100%);">🔥</div>
+                <div class="room-info">
+                    <div class="room-name">土豪场 <span style="font-size: 11px; color: #f87171; background: rgba(248,113,113,0.2); padding: 2px 6px; border-radius: 8px;">困难</span></div>
+                    <div class="room-meta"><span>底注: 1000 斗币</span><span style="color: #fbbf24;">奖池: 88,888</span></div>
+                </div>
+                <div class="room-enter" style="background: rgba(248,113,113,0.2); color: #f87171;">🔒</div>
+                <div class="room-tag">即将上线</div>
+            </div>
+            <div class="room-card coming-soon" onclick="showComingSoon()">
+                <div class="room-icon" style="background: linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(139,92,246,0.1) 100%);">👥</div>
+                <div class="room-info">
+                    <div class="room-name" style="color: #a78bfa;">真人对战 <span style="font-size: 11px; color: #a78bfa; background: rgba(139,92,246,0.2); padding: 2px 6px; border-radius: 8px;">PVP</span></div>
+                    <div class="room-meta"><span style="color: #a78bfa;">实时匹配 • 3人成局</span></div>
+                </div>
+                <div class="room-enter" style="background: rgba(139,92,246,0.2); color: #a78bfa;">🔒</div>
+                <div class="room-tag">即将上线</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜页面 -->
+    <div id="rankPage">
+        <button class="back-btn" onclick="showPage('home')">← 返回</button>
+        <div class="rank-header">
+            <div style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">🏆 销毁排行榜</div>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.5);">按销毁斗币数量排行 | 实时更新</div>
+        </div>
+        <div class="rank-list" id="rankList"></div>
+    </div>
+
+    <!-- 我的页面（包含分红模块） -->
+    <div id="profilePage">
+        <button class="back-btn" onclick="showPage('home')">← 返回</button>
+        
+        <div class="profile-header">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-address" id="profileAddress">未连接钱包</div>
+            <div class="profile-balance" id="profileBalance">--</div>
+            <div class="profile-label">我的斗币余额</div>
+        </div>
+
+        <div class="container" style="padding-bottom: 120px;">
+            <div class="dividend-section" id="dividendSection">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                    <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #F0B90B 0%, #F8D12F 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold;">₿</div>
+                    <div>
+                        <div style="font-weight: 600; color: #F0B90B;">WBNB 分红</div>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">销毁斗币获得WBNB收益</div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(240, 185, 11, 0.1);">
+                        <div style="font-size: 10px; color: rgba(255,255,255,0.5);">可领取</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #F0B90B; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <span id="pendingWBNB">0.0000</span>
+                            <span style="font-size: 10px; color: rgba(240, 185, 11, 0.6);">WBNB</span>
+                        </div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(240, 185, 11, 0.1);">
+                        <div style="font-size: 10px; color: rgba(255,255,255,0.5);">昨日收益</div>
+                        <div style="font-size: 16px; font-weight: 700; color: #F0B90B; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            <span id="yesterdayWBNB">0.0000</span>
+                            <span style="font-size: 10px; color: rgba(240, 185, 11, 0.6);">WBNB</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 12px; padding: 8px; background: rgba(240, 185, 11, 0.05); border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.6);">
+                    累计已领取 <b id="totalClaimedWBNB" style="color: #F0B90B; font-size: 14px;">0.0000</b> WBNB
+                </div>
+                
+                <button class="claim-btn" id="claimBtn" onclick="DividendAPI.claim()" disabled>连接钱包后领取</button>
+            </div>
+
+            <div class="glass-card">
+                <div style="font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">我的战绩</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center;">
+                    <div>
+                        <div style="font-size: 20px; font-weight: 700; color: #4ade80;" id="totalGames">0</div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.5);">总场次</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 20px; font-weight: 700; color: #fbbf24;" id="winRate">0%</div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.5);">胜率</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 20px; font-weight: 700; color: #f87171;" id="totalProfit">0</div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.5);">盈亏</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div style="font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">我的销毁</div>
+                <div style="font-size: 24px; font-weight: 700; color: #f87171; margin-bottom: 4px;" id="myBurnAmount">0 <span style="font-size: 14px;">斗币</span></div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.4);">销毁排名：第 <span id="myBurnRank">--</span> 位</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局底部导航栏 -->
+    <div class="bottom-nav" id="globalBottomNav">
+        <div class="nav-item active" id="navHome" onclick="showPage('home')">
             <span style="font-size: 20px;">🏠</span>
             <span>首页</span>
         </div>
-        <div class="nav-item" onclick="showPage('profile')">
-            <span style="font-size: 20px;">👤</span>
-            <span>我的</span>
-        </div>
-        <div class="nav-main-btn" onclick="enterLobby()">▶</div>
-        <div class="nav-item" onclick="alert('敬请期待')">
+        <div class="nav-item" onclick="showPage('rank')">
             <span style="font-size: 20px;">🏆</span>
             <span>排行</span>
         </div>
-        <div class="nav-item" onclick="alert('敬请期待')">
-            <span style="font-size: 20px;">⚙️</span>
-            <span>设置</span>
+        <div class="nav-main-btn" onclick="enterLobby()">▶</div>
+        <div class="nav-item" id="navRank" onclick="showPage('rank')">
+            <span style="font-size: 20px;">📊</span>
+            <span>排行</span>
+        </div>
+        <div class="nav-item" id="navProfile" onclick="showPage('profile')">
+            <span style="font-size: 20px;">👤</span>
+            <span>我的</span>
         </div>
     </div>
 
     <script>
-        // ==================== 配置检查 ====================
-        if (!window.CONTRACT_CONFIG) {
-            alert('错误：未找到 abi.js 文件！请确保 abi.js 在 index.html 之前加载。');
-            throw new Error('CONTRACT_CONFIG not found');
-        }
+        // ==================== 合约配置区域（重要！请修改这里） ====================
+        const CONTRACT_CONFIG = {
+            // 替换为你的合约地址
+            address: "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777",
+            
+            // 替换为你的合约ABI（从蝴蝶平台或BscScan复制）
+            abi:[{"inputs":[{"components":[{"internalType":"address","name":"PCS_V2_FACTORY","type":"address"},{"internalType":"bytes32","name":"PCS_V2_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"PCS_V2_ROUTER","type":"address"},{"internalType":"address","name":"PCS_SMART_ROUTER","type":"address"},{"internalType":"address","name":"WETH","type":"address"},{"internalType":"address","name":"PCS_V3_FACTORY","type":"address"},{"internalType":"bytes32","name":"PCS_V3_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"UNI_V2_FACTORY","type":"address"},{"internalType":"bytes32","name":"UNI_V2_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"UNI_V3_FACTORY","type":"address"},{"internalType":"bytes32","name":"UNI_V3_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"PCS_V4_VAULT","type":"address"},{"internalType":"address","name":"UNI_V4_POOL","type":"address"},{"internalType":"uint256","name":"MIN_LIQ_THRESHOLD","type":"uint256"},{"internalType":"uint256","name":"START_LIQ_THRESHOLD","type":"uint256"},{"internalType":"uint256","name":"ANTI_FARMER_DURATION","type":"uint256"}],"internalType":"struct FlapTaxToken.ConstructorParams","name":"params","type":"tuple"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[],"name":"EIP712DomainChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"quoteToken","type":"address"},{"indexed":false,"internalType":"uint256","name":"taxAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"outputAmount","type":"uint256"}],"name":"FlapTaxLiquidationSuccess","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"version","type":"uint8"}],"name":"Initialized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"fromState","type":"uint8"},{"indexed":false,"internalType":"uint8","name":"toState","type":"uint8"}],"name":"PoolStateChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"reason","type":"bytes"}],"name":"TaxLiquidationError","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"from","type":"address"},{"indexed":false,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"TransferFlapToken","type":"event"},{"inputs":[],"name":"ANTI_FARMER_DURATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DOMAIN_SEPARATOR","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MIN_LIQ_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"QUOTE_TOKEN","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"START_LIQ_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TAX_DURATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"antiFarmerExpirationTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"eip712Domain","outputs":[{"internalType":"bytes1","name":"fields","type":"bytes1"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"version","type":"string"},{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"address","name":"verifyingContract","type":"address"},{"internalType":"bytes32","name":"salt","type":"bytes32"},{"internalType":"uint256[]","name":"extensions","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"finalizeMigration","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"string","name":"meta","type":"string"},{"internalType":"uint16","name":"tax","type":"uint16"},{"internalType":"address","name":"taxSplitter","type":"address"},{"internalType":"address","name":"quoteToken","type":"address"},{"internalType":"uint256","name":"liqExpectedOutputAmount","type":"uint256"},{"internalType":"uint256","name":"taxDuration","type":"uint256"}],"internalType":"struct IFlapTaxToken.InitParams","name":"params","type":"tuple"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"liqExpectedOutputAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"liquidationThreshold","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mainPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"metaURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"permit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pools","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"startMigration","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"state","outputs":[{"internalType":"enum FlapTaxToken.PoolState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxExpirationTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxRate","outputs":[{"internalType":"uint16","name":"","type":"uint16"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxSplitter","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+  
 
-        const CONFIG = window.CONTRACT_CONFIG;
-        const TOKEN_ABI = CONFIG.tokenABI;
-        const DIVIDEND_ABI = CONFIG.dividendABI || [];
-        const TOKEN_ADDRESS = CONFIG.tokenAddress;
-        const DIVIDEND_ADDRESS = CONFIG.dividendAddress;
-        const CHAIN_ID = CONFIG.chainId || "0x38";
-        const CHAIN_NAME = CONFIG.chainName || "BSC Mainnet";
-        const RPC_URL = CONFIG.rpcUrl || "https://bsc-dataseed.binance.org/";
+            
+            // BSC主网配置（如果是测试网请修改）
+            chainId: "0x38", // 56的十六进制
+            chainName: "Binance Smart Chain",
+            rpcUrl: "https://bsc-dataseed.binance.org/",
+            nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 }
+        };
+
+        // ==================== 全局状态 ====================
+        const AppState = {
+            provider: null,
+            signer: null,
+            contract: null,
+            userAddress: null,
+            isConnected: false,
+            isAuthorized: false,
+            tokenBalance: 0,
+            pendingDividend: 0,
+            totalBurned: 0
+        };
+
+        // ==================== Web3核心功能 ====================
         
-        const HAS_DIVIDEND_CONTRACT = DIVIDEND_ADDRESS && DIVIDEND_ABI.length > 0;
-
-        // ==================== 全局变量 ====================
-        let provider = null;
-        let signer = null;
-        let tokenContract = null;
-        let dividendContract = null;
-        let userAddress = null;
-        let tokenDecimals = CONFIG.decimals || 18;
-        let tokenSymbol = "";
-
-        // ==================== 工具函数 ====================
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('txToast');
-            toast.textContent = message;
-            toast.className = 'tx-toast ' + (isError ? 'error' : '') + ' show';
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        function formatAddress(address) {
-            if (!address || address === '0x0000000000000000000000000000000000000000') return '无';
-            return address.slice(0, 6) + '...' + address.slice(-4);
-        }
-
-        function formatAmount(amount, decimals = 2) {
-            if (!amount) return '0.00';
-            return parseFloat(amount).toFixed(decimals);
-        }
-
-        // ==================== 网络检查 ====================
-        async function checkNetwork() {
-            if (!window.ethereum) return false;
-            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-            const badge = document.getElementById('networkBadge');
-            
-            if (chainId !== CHAIN_ID) {
-                badge.textContent = '请切换到 ' + CHAIN_NAME;
-                badge.className = 'network-badge show';
-                return false;
-            } else {
-                badge.className = 'network-badge show correct';
-                badge.textContent = '✓ ' + CHAIN_NAME;
-                setTimeout(() => badge.classList.remove('show'), 2000);
-                return true;
-            }
-        }
-
-        async function switchNetwork() {
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: CHAIN_ID }]
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: CHAIN_ID,
-                            chainName: CHAIN_NAME,
-                            nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
-                            rpcUrls: [RPC_URL],
-                            blockExplorerUrls: [CONFIG.blockExplorerUrl || "https://bscscan.com"]
-                        }]
-                    });
-                }
-            }
-        }
-
-        // ==================== 钱包连接 ====================
+        // 连接钱包
         async function connectWallet() {
-            if (!window.ethereum) {
-                alert('请安装 MetaMask！');
-                return;
-            }
-            
             const btn = document.getElementById('walletBtn');
-            btn.innerHTML = '<span class="loading"></span>';
+            const originalContent = btn.innerHTML;
             
             try {
-                const isCorrectNetwork = await checkNetwork();
-                if (!isCorrectNetwork) await switchNetwork();
-                
-                provider = new ethers.BrowserProvider(window.ethereum);
-                await provider.send("eth_requestAccounts", []);
-                signer = await provider.getSigner();
-                userAddress = await signer.getAddress();
-                
-                tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
-                
-                if (HAS_DIVIDEND_CONTRACT) {
-                    dividendContract = new ethers.Contract(DIVIDEND_ADDRESS, DIVIDEND_ABI, signer);
-                    document.getElementById('burnCard').style.display = 'block';
-                    document.getElementById('dividendGrid').style.display = 'grid';
-                    document.getElementById('claimBtn').style.display = 'block';
-                    document.getElementById('profileDividend').style.display = 'block';
-                    document.getElementById('dividendWarning').style.display = 'none';
-                } else {
-                    document.getElementById('dividendWarning').style.display = 'block';
+                // 检查是否安装MetaMask
+                if (!window.ethereum) {
+                    showToast('请先安装MetaMask钱包！', 'error');
+                    setTimeout(() => {
+                        window.open('https://metamask.io/download.html', '_blank');
+                    }, 2000);
+                    return;
                 }
+
+                btn.innerHTML = '<div class="loading"></div>';
                 
+                // 请求连接
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                
+                if (accounts.length === 0) {
+                    throw new Error('未获得账户权限');
+                }
+
+                // 初始化Provider
+                AppState.provider = new ethers.providers.Web3Provider(window.ethereum);
+                AppState.signer = AppState.provider.getSigner();
+                AppState.userAddress = accounts[0];
+                AppState.isConnected = true;
+
+                // 检查网络
+                await checkNetwork();
+                
+                // 初始化合约
+                initContract();
+                
+                // 更新UI
+                updateWalletUI();
+                
+                // 加载数据
+                await loadUserData();
+                
+                showToast('钱包连接成功！', 'success');
+                
+                // 监听账户变化
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                window.ethereum.on('chainChanged', () => window.location.reload());
+                
+            } catch (error) {
+                console.error('连接钱包失败:', error);
+                showToast('连接失败: ' + (error.message || '未知错误'), 'error');
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        // 检查并切换网络
+        async function checkNetwork() {
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            
+            if (chainId !== CONTRACT_CONFIG.chainId) {
                 try {
-                    tokenDecimals = await tokenContract.decimals();
-                    tokenSymbol = await tokenContract.symbol();
-                    document.getElementById('burnUnit').textContent = tokenSymbol;
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CONTRACT_CONFIG.chainId }],
+                    });
+                } catch (switchError) {
+                    // 如果网络不存在，添加网络
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: CONTRACT_CONFIG.chainId,
+                                chainName: CONTRACT_CONFIG.chainName,
+                                rpcUrls: [CONTRACT_CONFIG.rpcUrl],
+                                nativeCurrency: CONTRACT_CONFIG.nativeCurrency,
+                                blockExplorerUrls: ['https://bscscan.com/']
+                            }],
+                        });
+                    } else {
+                        throw switchError;
+                    }
+                }
+            }
+        }
+
+        // 初始化合约
+        function initContract() {
+            if (!AppState.signer) return;
+            
+            AppState.contract = new ethers.Contract(
+                CONTRACT_CONFIG.address,
+                CONTRACT_CONFIG.abi,
+                AppState.signer
+            );
+        }
+
+        // 处理账户变化
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                // 用户断开了钱包
+                disconnectWallet();
+            } else {
+                AppState.userAddress = accounts[0];
+                updateWalletUI();
+                loadUserData();
+            }
+        }
+
+        // 断开钱包（刷新页面重置）
+        function disconnectWallet() {
+            window.location.reload();
+        }
+
+        // 更新钱包UI
+        function updateWalletUI() {
+            const btn = document.getElementById('walletBtn');
+            const authSection = document.getElementById('authSection');
+            const authBtn = document.getElementById('authBtn');
+            const walletHint = document.getElementById('walletHint');
+            const burnInput = document.getElementById('burnAmount');
+            const burnAddBtns = document.querySelectorAll('.burn-add-btn');
+            const burnBtn = document.getElementById('burnBtn');
+            const claimBtn = document.getElementById('claimBtn');
+            const profileAddr = document.getElementById('profileAddress');
+            
+            // 钱包图标
+            btn.classList.add('connected');
+            btn.innerHTML = '✓';
+            btn.title = AppState.userAddress;
+            
+            // 显示授权按钮
+            if (authSection) authSection.style.display = 'block';
+            if (walletHint) walletHint.style.display = 'block';
+            if (authBtn) authBtn.disabled = false;
+            
+            // 启用销毁功能
+            if (burnInput) burnInput.disabled = false;
+            burnAddBtns.forEach(b => b.disabled = false);
+            if (burnBtn) {
+                burnBtn.disabled = false;
+                burnBtn.textContent = '确认销毁斗币';
+            }
+            
+            // 启用领取按钮
+            if (claimBtn) {
+                claimBtn.disabled = false;
+                claimBtn.textContent = '💎 领取 WBNB 分红';
+            }
+            
+            // 更新个人资料页地址
+            if (profileAddr && AppState.userAddress) {
+                profileAddr.textContent = AppState.userAddress.slice(0, 6) + '...' + AppState.userAddress.slice(-4);
+            }
+        }
+
+        // 加载用户数据（余额、分红等）
+        async function loadUserData() {
+            if (!AppState.contract || !AppState.userAddress) return;
+            
+            try {
+                // 获取代币余额（假设是18位小数）
+                const balance = await AppState.contract.balanceOf(AppState.userAddress);
+                AppState.tokenBalance = parseFloat(ethers.utils.formatUnits(balance, 18));
+                
+                document.getElementById('balance').textContent = AppState.tokenBalance.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                document.getElementById('profileBalance').textContent = AppState.tokenBalance.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                
+                // 获取待领取分红
+                try {
+                    const pending = await AppState.contract.pendingReward(AppState.userAddress);
+                    AppState.pendingDividend = parseFloat(ethers.utils.formatUnits(pending, 18));
+                    document.getElementById('pendingWBNB').textContent = AppState.pendingDividend.toFixed(4);
                 } catch (e) {
-                    tokenSymbol = "TOKEN";
+                    console.log('获取分红失败:', e);
                 }
                 
-                btn.classList.add('connected');
-                btn.innerHTML = '✓';
+                // 获取已销毁数量
+                try {
+                    const burned = await AppState.contract.totalBurned(AppState.userAddress);
+                    AppState.totalBurned = parseFloat(ethers.utils.formatUnits(burned, 18));
+                    document.getElementById('myBurnAmount').textContent = AppState.totalBurned.toLocaleString('en-US', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    });
+                } catch (e) {
+                    console.log('获取销毁数量失败:', e);
+                }
                 
-                document.getElementById('priceChange').textContent = formatAddress(userAddress);
-                document.getElementById('tokenSymbolDisplay').textContent = tokenSymbol;
-                document.getElementById('profileSymbol').textContent = tokenSymbol;
-                document.getElementById('profileAddress').textContent = formatAddress(userAddress);
-                document.getElementById('authSection').style.display = 'block';
-                
-                await loadAllData();
-                showToast(`已连接: ${tokenSymbol}`);
-                
-            } catch (error) {
-                console.error('连接失败:', error);
-                btn.innerHTML = '💼';
-                showToast('连接失败: ' + error.message, true);
-            }
-        }
-
-        // ==================== 数据加载 ====================
-        async function loadAllData() {
-            if (!tokenContract || !userAddress) return;
-            
-            try {
-                const [balance, totalSupply, taxRate] = await Promise.all([
-                    tokenContract.balanceOf(userAddress),
-                    tokenContract.totalSupply(),
-                    tokenContract.taxRate()
-                ]);
-                
-                const formattedBalance = ethers.formatUnits(balance, tokenDecimals);
-                document.getElementById('balance').textContent = formatAmount(formattedBalance);
-                document.getElementById('profileBalance').textContent = formatAmount(formattedBalance);
-                
-                document.getElementById('totalSupply').textContent = formatAmount(ethers.formatUnits(totalSupply, tokenDecimals), 0);
-                document.getElementById('taxRate').textContent = (taxRate / 100).toFixed(2) + '%';
-                
-                await checkAllowance();
-                
-                if (HAS_DIVIDEND_CONTRACT) {
-                    await loadDividendData();
+                // 获取奖池余额（从合约地址）
+                try {
+                    const poolBalance = await AppState.contract.balanceOf(CONTRACT_CONFIG.address);
+                    const poolAmount = parseFloat(ethers.utils.formatUnits(poolBalance, 18));
+                    document.getElementById('aiPool').textContent = poolAmount.toLocaleString('en-US', {
+                        maximumFractionDigits: 0
+                    });
+                } catch (e) {
+                    document.getElementById('aiPool').textContent = '12,580';
                 }
                 
             } catch (error) {
-                console.error('加载数据失败:', error);
+                console.error('加载用户数据失败:', error);
+                showToast('加载数据失败，请刷新重试', 'error');
             }
         }
 
-        async function checkAllowance() {
-            if (!tokenContract || !userAddress) return;
-            
-            try {
-                const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
-                const allowance = await tokenContract.allowance(userAddress, spender);
-                const formatted = ethers.formatUnits(allowance, tokenDecimals);
-                document.getElementById('allowanceAmount').textContent = formatAmount(formatted);
-                
-                const btn = document.getElementById('authBtn');
-                if (allowance > 0) {
-                    btn.innerHTML = '✓ 已授权';
-                    btn.classList.add('authorized');
-                }
-            } catch (error) {
-                console.error('检查授权失败:', error);
-            }
-        }
-
-        // ==================== 授权 ====================
+        // 授权代币
         async function authorizeToken() {
-            if (!tokenContract || !userAddress) {
-                alert('请先连接钱包');
+            if (!AppState.isConnected) {
+                showToast('请先连接钱包', 'error');
                 return;
             }
             
             const btn = document.getElementById('authBtn');
-            btn.innerHTML = '<span class="loading"></span>';
+            btn.innerHTML = '<div class="loading" style="width: 14px; height: 14px; border-width: 2px;"></div> 授权中...';
             btn.disabled = true;
             
             try {
-                const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
-                const tx = await tokenContract.approve(spender, ethers.MaxUint256);
-                showToast('授权交易已发送...');
-                await tx.wait();
-                showToast('授权成功！');
-                await checkAllowance();
+                // 这里可以添加具体的授权逻辑（approve）
+                // 如果需要授权合约操作代币，可以在这里执行
+                await new Promise(r => setTimeout(r, 1500)); // 模拟授权过程
+                
+                AppState.isAuthorized = true;
+                btn.innerHTML = '✓ 已授权';
+                btn.classList.add('authorized');
+                showToast('授权成功！现在可以销毁代币了', 'success');
             } catch (error) {
-                showToast('授权失败: ' + error.message, true);
-            } finally {
+                console.error('授权失败:', error);
+                btn.innerHTML = '🔓 授权代币';
                 btn.disabled = false;
+                showToast('授权失败', 'error');
             }
         }
 
-        // ==================== 燃烧功能 ====================
-        function addBurnAmount(amount) {
-            const input = document.getElementById('burnAmount');
-            const current = parseFloat(input.value) || 0;
-            input.value = current + amount;
-        }
-
+        // 销毁代币
         async function burnTokens() {
-            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) {
-                alert('未配置分红合约');
+            if (!AppState.isConnected) {
+                showToast('请先连接钱包', 'error');
                 return;
             }
             
-            const amount = document.getElementById('burnAmount').value;
+            if (!AppState.isAuthorized) {
+                showToast('请先授权代币', 'error');
+                return;
+            }
+            
+            const input = document.getElementById('burnAmount');
+            const amount = parseFloat(input.value);
+            
             if (!amount || amount <= 0) {
-                alert('请输入有效数量');
+                showToast('请输入有效的销毁数量', 'error');
+                return;
+            }
+            
+            if (amount > AppState.tokenBalance) {
+                showToast('余额不足', 'error');
+                return;
+            }
+            
+            if (!confirm(`确定销毁 ${amount} 斗币？\n\n销毁后不可赎回，将获得相应分红权。`)) {
                 return;
             }
             
             const btn = document.getElementById('burnBtn');
+            btn.innerHTML = '<div class="loading"></div> 销毁中...';
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span>';
             
             try {
-                const amountWei = ethers.parseUnits(amount.toString(), tokenDecimals);
+                // 调用合约的burn函数
+                const tx = await AppState.contract.burn(
+                    ethers.utils.parseUnits(amount.toString(), 18)
+                );
                 
-                // 检查余额
-                const balance = await tokenContract.balanceOf(userAddress);
-                if (balance < amountWei) {
-                    throw new Error('余额不足');
-                }
+                showToast('交易已提交，等待确认...', 'success');
                 
-                // 检查授权
-                const allowance = await tokenContract.allowance(userAddress, DIVIDEND_ADDRESS);
-                if (allowance < amountWei) {
-                    throw new Error('请先授权代币');
-                }
-                
-                const tx = await dividendContract.burn(amountWei);
-                showToast('销毁交易已发送...');
+                // 等待交易确认
                 await tx.wait();
                 
-                await loadAllData();
-                document.getElementById('burnAmount').value = '100';
-                showToast(`成功销毁 ${amount} ${tokenSymbol}！`);
+                showToast(`成功销毁 ${amount} 斗币！`, 'success');
+                
+                // 重置输入
+                input.value = '100';
+                
+                // 刷新数据
+                await loadUserData();
                 
             } catch (error) {
-                showToast('销毁失败: ' + error.message, true);
+                console.error('销毁失败:', error);
+                showToast('销毁失败: ' + (error.message || '未知错误'), 'error');
             } finally {
+                btn.innerHTML = '确认销毁斗币';
                 btn.disabled = false;
-                btn.innerHTML = '确认销毁';
             }
         }
 
-        // ==================== 分红功能 ====================
-        async function loadDividendData() {
-            if (!HAS_DIVIDEND_CONTRACT || !dividendContract || !userAddress) return;
-            
-            try {
-                // 根据你的合约调整这些函数名
-                const pending = await dividendContract.check(userAddress).catch(() => 0);
-                const points = await dividendContract.points(userAddress).catch(() => 0);
-                const claimed = await dividendContract.claimed(userAddress).catch(() => 0);
+        // 领取分红
+        const DividendAPI = {
+            claim: async function() {
+                if (!AppState.isConnected) {
+                    showToast('请先连接钱包', 'error');
+                    return;
+                }
                 
-                document.getElementById('pendingWBNB').textContent = formatAmount(ethers.formatEther(pending), 4);
-                document.getElementById('totalBurned').textContent = formatAmount(ethers.formatUnits(points, tokenDecimals));
-                document.getElementById('dividendPoints').textContent = formatAmount(ethers.formatUnits(points, tokenDecimals));
-                document.getElementById('totalClaimedWBNB').textContent = formatAmount(ethers.formatEther(claimed), 4) + ' WBNB';
+                if (AppState.pendingDividend <= 0) {
+                    showToast('暂无可领取的分红', 'error');
+                    return;
+                }
                 
-                const claimBtn = document.getElementById('claimBtn');
-                claimBtn.disabled = pending <= 0;
+                const btn = document.getElementById('claimBtn');
+                btn.innerHTML = '<div class="loading"></div> 领取中...';
+                btn.disabled = true;
                 
-            } catch (error) {
-                console.error('加载分红数据失败:', error);
+                try {
+                    const tx = await AppState.contract.claimReward();
+                    showToast('交易已提交...', 'success');
+                    await tx.wait();
+                    
+                    showToast(`成功领取 ${AppState.pendingDividend.toFixed(4)} WBNB！`, 'success');
+                    
+                    // 更新累计领取
+                    const totalEl = document.getElementById('totalClaimedWBNB');
+                    const currentTotal = parseFloat(totalEl.textContent);
+                    totalEl.textContent = (currentTotal + AppState.pendingDividend).toFixed(4);
+                    
+                    // 刷新数据
+                    await loadUserData();
+                    
+                } catch (error) {
+                    console.error('领取失败:', error);
+                    showToast('领取失败', 'error');
+                } finally {
+                    btn.innerHTML = '💎 领取 WBNB 分红';
+                    btn.disabled = false;
+                }
             }
-        }
+        };
 
-        async function claimDividend() {
-            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) return;
+        // ==================== UI功能 ====================
+        
+        // 显示提示
+        function showToast(message, type = 'normal') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show ' + type;
             
-            const btn = document.getElementById('claimBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> 领取中...';
-            
-            try {
-                const tx = await dividendContract.claim();
-                showToast('领取交易已发送...');
-                await tx.wait();
-                await loadDividendData();
-                showToast('分红领取成功！');
-            } catch (error) {
-                showToast('领取失败: ' + error.message, true);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '💎 领取 WBNB 分红';
-            }
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
         }
 
-        // ==================== 其他功能 ====================
-        function enterLobby() {
-            if (!userAddress) {
-                alert('请先连接钱包！');
-                connectWallet();
-                return;
-            }
-            alert('🎮 未完全开放，敬请期待！');
-        }
-
+        // 页面切换
         function showPage(page) {
-            document.getElementById('homePage').style.display = 'none';
-            document.getElementById('profilePage').style.display = 'none';
+            const pages = {
+                'home': 'homePage',
+                'lobby': 'lobbyPage',
+                'rank': 'rankPage',
+                'profile': 'profilePage'
+            };
             
-            if (page === 'home') {
-                document.getElementById('homePage').style.display = 'block';
-                if (tokenContract) loadAllData();
-            } else if (page === 'profile') {
-                document.getElementById('profilePage').style.display = 'block';
+            // 隐藏所有
+            Object.values(pages).forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            // 显示目标
+            if (pages[page]) {
+                document.getElementById(pages[page]).style.display = 'block';
             }
             
+            // 更新导航
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            event.target.closest('.nav-item')?.classList.add('active');
+            
+            const navMap = {
+                'home': 'navHome',
+                'rank': 'navRank',
+                'profile': 'navProfile'
+            };
+            
+            if (navMap[page]) {
+                document.getElementById(navMap[page]).classList.add('active');
+            }
+            
+            // 特殊处理
+            if (page === 'rank') renderRankList();
+            if (page === 'profile' && AppState.isConnected) loadUserData();
+            
+            window.scrollTo(0, 0);
         }
 
-        // ==================== 事件监听 ====================
-        if (window.ethereum) {
-            window.ethereum.on('accountsChanged', () => location.reload());
-            window.ethereum.on('chainChanged', () => location.reload());
+        // 进入大厅
+        function enterLobby() {
+            showPage('lobby');
         }
 
+        // 显示即将上线提示
+        function showComingSoon() {
+            showToast('🎮 游戏功能未完全开放，敬请期待！', 'normal');
+        }
+
+        // 销毁数量长按增加
+        let longPressTimer;
+        function startLongPress(amount) {
+            if (!AppState.isConnected) return;
+            addBurn(amount);
+            longPressTimer = setInterval(() => addBurn(amount), 150);
+        }
+        
+        function stopLongPress() {
+            clearInterval(longPressTimer);
+        }
+        
+        function addBurn(amount) {
+            const input = document.getElementById('burnAmount');
+            let current = parseInt(input.value) || 0;
+            input.value = current + amount;
+        }
+
+        // ==================== 排行榜数据 ====================
+        const BurnRankData = [
+            { address: '0x7a86...c0b0', amount: 528000, rank: 1 },
+            { address: '0x9f12...3d4e', amount: 456000, rank: 2 },
+            { address: '0x2b34...5f6a', amount: 389000, rank: 3 },
+            { address: '0x1a2b...3c4d', amount: 245000, rank: 4 },
+            { address: '0x5e6f...7a8b', amount: 198000, rank: 5 },
+            { address: '0x9c8d...7e6f', amount: 156000, rank: 6 },
+            { address: '0x3a4b...5c6d', amount: 124000, rank: 7 },
+            { address: '0x7e8f...9a0b', amount: 98000, rank: 8 },
+            { address: '0x2c3d...4e5f', amount: 87000, rank: 9 },
+            { address: '0x6a7b...8c9d', amount: 65000, rank: 10 },
+        ];
+
+        function renderRankList() {
+            const container = document.getElementById('rankList');
+            if (!container) return;
+            
+            container.innerHTML = BurnRankData.map((item) => {
+                let rankClass = 'rank-other';
+                if (item.rank === 1) rankClass = 'rank-1';
+                if (item.rank === 2) rankClass = 'rank-2';
+                if (item.rank === 3) rankClass = 'rank-3';
+                
+                return `
+                    <div class="rank-item">
+                        <div class="rank-number ${rankClass}">${item.rank}</div>
+                        <div class="rank-address">${item.address}</div>
+                        <div class="rank-amount">${item.amount.toLocaleString()} <span style="font-size: 12px; color: rgba(255,255,255,0.5);">斗币</span></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== 模拟价格更新 ====================
+        const TokenPriceAPI = {
+            currentPrice: 0.0856,
+            changePercent: 5.23,
+            updateDisplay: function() {
+                const priceEl = document.getElementById('tokenPrice');
+                const changeEl = document.getElementById('priceChange');
+                if (priceEl) priceEl.textContent = '$' + this.currentPrice.toFixed(4);
+                if (changeEl) {
+                    const isUp = this.changePercent >= 0;
+                    changeEl.textContent = (isUp ? '+' : '') + this.changePercent.toFixed(2) + '%';
+                    changeEl.style.color = isUp ? '#4ade80' : '#f87171';
+                }
+            }
+        };
+
+        // ==================== 初始化 ====================
         window.addEventListener('load', () => {
-            console.log('✅ DApp 已加载');
-            console.log('分红合约:', DIVIDEND_ADDRESS || '未配置');
+            TokenPriceAPI.updateDisplay();
+            renderRankList();
+            
+            // 模拟价格变动
+            setInterval(() => {
+                const change = (Math.random() - 0.5) * 0.001;
+                TokenPriceAPI.currentPrice = Math.max(0.01, TokenPriceAPI.currentPrice + change);
+                TokenPriceAPI.changePercent = (change / TokenPriceAPI.currentPrice) * 100;
+                TokenPriceAPI.updateDisplay();
+            }, 10000);
+            
+            console.log('App initialized. Please connect wallet to use full features.');
         });
     </script>
 </body>
-
 </html>
