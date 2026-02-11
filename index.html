@@ -9,40 +9,54 @@
     body{background:#0b0f17;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
     .container{max-width:420px;margin:0 auto;padding:25px}
     
-    .wallet-bar{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border:1px solid #334155;border-radius:12px;padding:12px 16px;margin-bottom:20px}
+    .wallet-bar{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border:1px solid #334155;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
     .wallet-status{display:flex;align-items:center;gap:8px;font-size:14px}
     .status-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;transition:all 0.3s}
     .status-dot.connected{background:#10b981;box-shadow:0 0 8px #10b981}
     .wallet-btn{background:#3b82f6;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+    .wallet-btn.disconnect{background:#475569}
     
     .card{background:#121a29;border-radius:16px;padding:24px;margin-bottom:16px}
     .title{font-size:22px;font-weight:700;color:#ffdf4f;margin-bottom:6px}
     .subtitle{color:#9ca3af;font-size:14px;margin-bottom:20px}
+    
+    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px;align-items:center}
+    .panel-info{display:flex;flex-direction:column}
+    .label{color:#9ca3af;font-size:13px;margin-bottom:2px}
+    .value{color:#fff;font-weight:600;font-size:16px}
+    .sub-value{color:#64748b;font-size:12px;margin-top:2px}
+    
     input{width:100%;background:#1e293b;border:none;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;margin-bottom:8px}
-    button{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:8px}
+    button{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:8px;transition:all 0.2s}
     .btn-approve{background:#f59e0b;color:#fff}
+    .btn-approve:hover{background:#d97706}
+    .btn-approve:disabled{background:#92400e;cursor:not-allowed}
     .btn-burn{background:#ef4444;color:#fff}
     .btn-burn:hover{background:#dc2626}
     .btn-claim{background:#10b981;color:#fff;margin-top:8px}
     .btn-claim:hover{background:#059669}
+    .btn-refresh{background:#3b82f6;color:#fff;margin-top:8px}
+    .btn-refresh:hover{background:#2563eb}
     
-    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px}
-    .label{color:#9ca3af;font-size:13px}
-    .value{color:#fff;font-weight:600;font-size:16px}
+    .btn-row{display:flex;gap:8px}
+    .btn-row button{flex:1;margin-bottom:0}
     
-    .success-box{background:rgba(16,185,129,0.1);border:1px solid #10b981;color:#6ee7b7;padding:12px;border-radius:8px;margin:12px 0;font-size:14px}
-    .tip{font-size:12px;color:#94a3b8;margin-top:12px;padding:10px;background:#0f172a;border-radius:8px}
+    .success-box{background:rgba(16,185,129,0.1);border:1px solid #10b981;color:#6ee7b7;padding:12px;border-radius:8px;margin:12px 0;font-size:14px;display:none}
+    .tip{font-size:12px;color:#94a3b8;margin-top:12px;padding:10px;background:#0f172a;border-radius:8px;border-left:3px solid #3b82f6}
+    
+    .loading{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-left:8px;vertical-align:middle}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
 <div class="container">
 
-  <div class="wallet-bar">
+  <div class="wallet-bar" id="walletBar">
     <div class="wallet-status">
       <div class="status-dot" id="statusDot"></div>
       <span id="statusText">未连接钱包</span>
     </div>
-    <button class="wallet-btn" onclick="toggleConnect()">连接钱包</button>
+    <button class="wallet-btn" id="connectBtn" onclick="toggleConnect()">连接钱包</button>
   </div>
 
   <div class="card">
@@ -50,35 +64,57 @@
     <div class="subtitle">Burn To Earn | 燃烧获取分红权</div>
 
     <div class="panel">
-      <div>
+      <div class="panel-info">
         <div class="label">代币余额</div>
       </div>
-      <div class="value" id="balance">--</div>
+      <div class="panel-info" style="text-align:right">
+        <div class="value" id="balance">--</div>
+      </div>
     </div>
+    
     <div class="panel">
-      <div class="label">我已燃烧</div>
-      <div class="value" id="myburn">--</div>
+      <div class="panel-info">
+        <div class="label">我已燃烧</div>
+        <div class="sub-value" id="burnedSub">累计燃烧数量</div>
+      </div>
+      <div class="panel-info" style="text-align:right">
+        <div class="value" id="myburn">--</div>
+      </div>
     </div>
+    
     <div class="panel">
-      <div class="label">可领取分红</div>
-      <div class="value" id="pending">--</div>
+      <div class="panel-info">
+        <div class="label">可领取分红</div>
+        <div class="sub-value" id="claimSub">≈ $0.00</div>
+      </div>
+      <div class="panel-info" style="text-align:right">
+        <div class="value" id="pending">--</div>
+      </div>
     </div>
 
     <div style="margin:20px 0;">
       <input id="amount" type="number" placeholder="输入燃烧数量" min="0" step="0.01"/>
     </div>
 
-    <button class="btn-approve" id="btnApprove" onclick="approve()" style="display:none">🔓 授权代币</button>
+    <!-- 授权按钮（始终显示，已授权后变灰提示） -->
+    <button class="btn-approve" id="btnApprove" onclick="approve()">🔓 授权代币（首次使用）</button>
+    
     <button class="btn-burn" id="btnBurn" onclick="burn()">🔥 立即燃烧</button>
     <button class="btn-claim" id="btnClaim" onclick="claim()">💰 领取分红</button>
     
-    <div class="success-box" id="successBox" style="display:none"></div>
+    <!-- 刷新按钮 -->
+    <div class="btn-row">
+      <button class="btn-refresh" onclick="updateData()">🔄 刷新数据</button>
+    </div>
+    
+    <div class="success-box" id="successBox"></div>
     
     <div class="tip">
-      💡 <strong>使用说明：</strong><br>
-      1. 输入要燃烧的数量，点击"立即燃烧"<br>
-      2. 在钱包中确认交易（消耗少量 BNB 作为 Gas）<br>
-      3. 燃烧成功后自动获得分红权，可随时领取 BNB 分红
+      💡 <strong>使用步骤：</strong><br>
+      1. 首次使用点击"授权代币"并确认<br>
+      2. 输入数量点击"立即燃烧"<br>
+      3. 燃烧后点击"🔄 刷新数据"查看更新<br>
+      4. 有分红后点击"领取分红"提取 BNB
     </div>
   </div>
 
@@ -90,13 +126,16 @@ const CONTRACT = "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777";
 const MAX_UINT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 
 const ABI = [
+  // ERC20 标准
   {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
   {"constant":true,"inputs":[{"name":"_owner","type":"address"},{"name":"_spender","type":"address"}],"name":"allowance","outputs":[{"name":"remaining","type":"uint256"}],"stateMutability":"view","type":"function"},
   {"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","stateMutability":"nonpayable","type":"function"},
   {"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","stateMutability":"nonpayable","type":"function"},
+  // 燃烧分红功能
   {"inputs":[],"name":"claim","stateMutability":"nonpayable","type":"function"},
   {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"totalBurned","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
 ];
 
 let web3, account, contract;
@@ -109,8 +148,18 @@ function showSuccess(msg) {
 }
 
 async function toggleConnect() {
-  if (account) location.reload();
-  else connect();
+  if (account) {
+    // 断开连接
+    account = null;
+    web3 = null;
+    contract = null;
+    document.getElementById('statusDot').classList.remove('connected');
+    document.getElementById('statusText').textContent = '未连接钱包';
+    document.getElementById('connectBtn').textContent = '连接钱包';
+    document.getElementById('connectBtn').classList.remove('disconnect');
+    return;
+  }
+  connect();
 }
 
 async function connect() {
@@ -128,13 +177,22 @@ async function connect() {
     
     document.getElementById('statusDot').classList.add('connected');
     document.getElementById('statusText').textContent = account.slice(0,6) + '...' + account.slice(-4);
+    document.getElementById('connectBtn').textContent = '断开连接';
+    document.getElementById('connectBtn').classList.add('disconnect');
     
+    // 加载数据并检查授权
     await updateData();
     await checkApprove();
     
+    // 监听账户变化
     window.ethereum.on('accountsChanged', (accs) => {
-      if (accs.length === 0) location.reload();
-      else { account = accs[0]; updateData(); }
+      if (accs.length === 0) {
+        location.reload();
+      } else {
+        account = accs[0];
+        updateData();
+        checkApprove();
+      }
     });
     
   } catch (err) {
@@ -142,73 +200,139 @@ async function connect() {
   }
 }
 
-async function updateData() {
+// 检查授权状态
+async function checkApprove() {
+  if (!contract || !account) return;
+  
   try {
-    const bal = await contract.methods.balanceOf(account).call();
-    document.getElementById('balance').textContent = 
-      parseFloat(web3.utils.fromWei(bal,'ether')).toFixed(2) + ' 踏马封神';
+    const allowance = await contract.methods.allowance(account, CONTRACT).call();
+    const allowed = parseFloat(web3.utils.fromWei(allowance, 'ether'));
     
-    const burned = await contract.methods.burnAmount(account).call();
-    document.getElementById('myburn').textContent = 
-      web3.utils.fromWei(burned,'ether') + ' 踏马封神';
+    const btn = document.getElementById('btnApprove');
     
-    const claim = await contract.methods.claimable(account).call();
-    document.getElementById('pending').textContent = 
-      parseFloat(web3.utils.fromWei(claim,'ether')).toFixed(4) + ' BNB';
-      
+    if (allowed > 1000000) {
+      // 已授权
+      btn.textContent = '✅ 已授权（无需重复操作）';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+    } else {
+      // 未授权
+      btn.textContent = '🔓 授权代币（首次使用）';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
   } catch (err) {
-    console.error('数据更新失败:', err);
+    console.error('检查授权失败:', err);
   }
 }
 
-async function checkApprove() {
-  try {
-    const allowance = await contract.methods.allowance(account, CONTRACT).call();
-    if (parseFloat(web3.utils.fromWei(allowance,'ether')) < 1000000) {
-      document.getElementById('btnApprove').style.display = 'block';
-    }
-  } catch (err) {}
-}
-
-async function approve() {
-  const btn = document.getElementById('btnApprove');
-  btn.textContent = '授权中...';
+// 更新所有数据
+async function updateData() {
+  if (!contract || !account) {
+    alert('请先连接钱包');
+    return;
+  }
+  
+  const btn = document.querySelector('.btn-refresh');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span class="loading"></span> 刷新中...';
   btn.disabled = true;
   
   try {
-    await contract.methods.approve(CONTRACT, MAX_UINT).send({from: account});
-    showSuccess('✅ 授权成功！现在可以燃烧了');
-    btn.style.display = 'none';
+    // 1. 查询余额
+    const bal = await contract.methods.balanceOf(account).call();
+    const balEth = parseFloat(web3.utils.fromWei(bal, 'ether')).toFixed(2);
+    document.getElementById('balance').textContent = balEth + ' 踏马封神';
+    
+    // 2. 查询已燃烧数量
+    const burned = await contract.methods.burnAmount(account).call();
+    const burnedEth = web3.utils.fromWei(burned, 'ether');
+    document.getElementById('myburn').textContent = burnedEth + ' 踏马封神';
+    document.getElementById('burnedSub').textContent = '累计已销毁 ' + burnedEth + ' 个';
+    
+    // 3. 查询可领取分红
+    const claimable = await contract.methods.claimable(account).call();
+    const claimEth = parseFloat(web3.utils.fromWei(claimable, 'ether')).toFixed(4);
+    document.getElementById('pending').textContent = claimEth + ' BNB';
+    document.getElementById('claimSub').textContent = '≈ $' + (claimEth * 300).toFixed(2) + ' USD';
+    
+    showSuccess('✅ 数据已更新');
+    
   } catch (err) {
-    alert('授权失败: ' + err.message);
-    btn.textContent = '🔓 授权代币';
+    console.error('更新数据失败:', err);
+    alert('刷新失败: ' + err.message);
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
+async function approve() {
+  if (!account) {
+    alert('请先连接钱包');
+    return;
+  }
+  
+  const btn = document.getElementById('btnApprove');
+  btn.innerHTML = '<span class="loading"></span> 授权中...';
+  btn.disabled = true;
+  
+  try {
+    await contract.methods.approve(CONTRACT, MAX_UINT).send({
+      from: account,
+      gas: 100000
+    });
+    
+    showSuccess('✅ 授权成功！现在可以燃烧代币了');
+    await checkApprove(); // 更新按钮状态
+    
+  } catch (err) {
+    if (err.message.includes('rejected')) {
+      alert('您取消了授权');
+    } else {
+      alert('授权失败: ' + err.message);
+    }
     btn.disabled = false;
   }
 }
 
 async function burn() {
+  if (!account) {
+    alert('请先连接钱包');
+    return;
+  }
+  
   const amount = document.getElementById('amount').value;
   if (!amount || amount <= 0) {
     alert('请输入燃烧数量');
     return;
   }
   
+  // 检查是否已授权
+  const allowance = await contract.methods.allowance(account, CONTRACT).call();
+  if (parseFloat(web3.utils.fromWei(allowance, 'ether')) < parseFloat(amount)) {
+    alert('请先点击"授权代币"进行授权');
+    return;
+  }
+  
   const btn = document.getElementById('btnBurn');
-  btn.textContent = '燃烧中...';
+  btn.innerHTML = '<span class="loading"></span> 燃烧中...';
   btn.disabled = true;
   
   try {
-    // 使用转账到合约地址的方式燃烧（您确认可行的方式）
     const value = web3.utils.toWei(amount, 'ether');
     
+    // 使用转账到合约地址的方式燃烧
     await contract.methods.transfer(CONTRACT, value).send({
       from: account,
       gas: 200000
     });
     
-    showSuccess('✅ 燃烧成功！已获得分红权');
+    showSuccess('✅ 燃烧成功！已销毁 ' + amount + ' 踏马封神');
     document.getElementById('amount').value = '';
-    await updateData();
+    
+    // 自动刷新数据
+    setTimeout(updateData, 2000);
     
   } catch (err) {
     if (err.message.includes('rejected')) {
@@ -217,20 +341,30 @@ async function burn() {
       alert('燃烧失败: ' + err.message);
     }
   } finally {
-    btn.textContent = '🔥 立即燃烧';
+    btn.innerHTML = '🔥 立即燃烧';
     btn.disabled = false;
   }
 }
 
 async function claim() {
+  if (!account) {
+    alert('请先连接钱包');
+    return;
+  }
+  
   const btn = document.getElementById('btnClaim');
-  btn.textContent = '领取中...';
+  btn.innerHTML = '<span class="loading"></span> 领取中...';
   btn.disabled = true;
   
   try {
-    await contract.methods.claim().send({from: account, gas: 200000});
-    showSuccess('✅ 分红领取成功！');
-    await updateData();
+    await contract.methods.claim().send({
+      from: account,
+      gas: 200000
+    });
+    
+    showSuccess('✅ 分红领取成功！BNB 已到账');
+    setTimeout(updateData, 2000);
+    
   } catch (err) {
     if (err.message.includes('rejected')) {
       alert('您取消了交易');
@@ -238,14 +372,15 @@ async function claim() {
       alert('领取失败: ' + (err.message || '可能没有可领取的分红'));
     }
   } finally {
-    btn.textContent = '💰 领取分红';
+    btn.innerHTML = '💰 领取分红';
     btn.disabled = false;
   }
 }
 
 // 自动连接
-if (localStorage.getItem('walletConnected')) connect();
-setInterval(() => { if(account) updateData() }, 15000);
+if (localStorage.getItem('walletConnected') === 'true') {
+  connect();
+}
 </script>
 </body>
 </html>
