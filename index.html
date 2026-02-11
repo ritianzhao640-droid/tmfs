@@ -3,231 +3,541 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>踏马封神 - 代币操作</title>
+  <title>踏马封神 - 燃烧分红</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:#0b0f17;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
     .container{max-width:420px;margin:0 auto;padding:25px}
-    .card{background:#121a29;border-radius:16px;padding:24px;margin-bottom:16px;border:1px solid #1e293b}
+    
+    /* 钱包状态栏样式 */
+    .wallet-bar {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      transition: all 0.3s;
+    }
+    .status-dot.connected {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .wallet-btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .wallet-btn:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+    .wallet-btn.disconnect {
+      background: #475569;
+    }
+    .wallet-info {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+    .wallet-select {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .wallet-select.show {
+      display: flex;
+    }
+    .wallet-modal {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 20px;
+      width: 90%;
+      max-width: 360px;
+    }
+    .wallet-modal h3 {
+      margin-bottom: 16px;
+      text-align: center;
+      color: #fff;
+    }
+    .wallet-option {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+    .wallet-option:hover {
+      border-color: #3b82f6;
+      background: #1e293b;
+    }
+    .wallet-option img {
+      width: 32px;
+      height: 32px;
+    }
+    .wallet-option-info {
+      flex: 1;
+    }
+    .wallet-option-title {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .wallet-option-desc {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+    
+    .card{background:#121a29;border-radius:16px;padding:24px;margin-bottom:16px}
     .title{font-size:22px;font-weight:700;color:#ffdf4f;margin-bottom:6px}
     .subtitle{color:#9ca3af;font-size:14px;margin-bottom:20px}
-    
-    .wallet-box{background:#1e293b;border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-    .wallet-btn{background:#3b82f6;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600}
-    .wallet-btn:hover{background:#2563eb}
-    .wallet-address{font-family:monospace;font-size:13px;color:#9ca3af}
-    
-    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px;border:1px solid #1f2937}
+    .input-box{position:relative}
+    input{width:100%;background:#1e293b;border:none;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;margin-bottom:12px}
+    button{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer}
+    .btn-burn{background:#ef4444;color:#fff}
+    .btn-burn:hover {background: #dc2626;}
+    .btn-claim{background:#10b981;color:#fff;margin-top:8px}
+    .btn-claim:hover {background: #059669;}
+    .btn-claim:disabled {background: #334155;cursor: not-allowed;}
+    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px;align-items:center}
     .label{color:#9ca3af;font-size:13px}
-    .value{color:#fff;font-weight:600;font-size:15px}
-    .value.highlight{color:#ffdf4f}
-    
-    .status-box{background:#1e293b;border:1px solid #374151;border-radius:8px;padding:12px 16px;margin-top:12px;font-size:13px;color:#9ca3af}
-    .status-box.error{background:#7f1d1d;border-color:#ef4444;color:#fca5a5}
-    .status-box.success{background:#064e3b;border-color:#059669;color:#6ee7b7}
-    
-    .function-list{margin-top:20px}
-    .func-item{background:#1e293b;border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px;color:#9ca3af}
-    .func-item.available{color:#4ade80;border-left:3px solid #4ade80}
-    .func-item.unavailable{color:#ef4444;border-left:3px solid #ef4444}
+    .value{color:#fff;font-weight:600;font-size:16px}
+    .balance-tag {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin {to {transform: rotate(360deg);}}
   </style>
 </head>
 <body>
 <div class="container">
 
-  <div class="card">
-    <div class="wallet-box">
-      <div>
-        <div style="font-size:12px;color:#9ca3af;margin-bottom:2px">钱包状态</div>
-        <div class="wallet-address" id="walletStatus">未连接</div>
+  <!-- 钱包连接状态栏 -->
+  <div class="wallet-bar" id="walletBar">
+    <div class="wallet-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">未连接钱包</span>
+    </div>
+    <button class="wallet-btn" id="connectBtn" onclick="handleWalletClick()">连接钱包</button>
+    <div class="wallet-info" id="walletInfo" style="display:none;">
+      <span id="networkName">--</span>
+      <span id="tokenBalance">余额: -- TAMA</span>
+    </div>
+  </div>
+
+  <!-- 钱包选择弹窗 -->
+  <div class="wallet-select" id="walletSelect" onclick="closeWalletSelect(event)">
+    <div class="wallet-modal" onclick="event.stopPropagation()">
+      <h3>选择钱包</h3>
+      <div class="wallet-option" onclick="connectWallet('metamask')" id="metamaskOption" style="display:none;">
+        <div style="width:32px;height:32px;background:#e2761b;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;">M</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-title">MetaMask</div>
+          <div class="wallet-option-desc">最流行的以太坊钱包</div>
+        </div>
       </div>
-      <button class="wallet-btn" id="connectBtn" onclick="connectWallet()">连接钱包</button>
+      <div class="wallet-option" onclick="connectWallet('coinbase')" id="coinbaseOption" style="display:none;">
+        <div style="width:32px;height:32px;background:#0052ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;">C</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-title">Coinbase Wallet</div>
+          <div class="wallet-option-desc">Coinbase 官方钱包</div>
+        </div>
+      </div>
+      <div class="wallet-option" onclick="connectWallet('tokenpocket')" id="tpOption" style="display:none;">
+        <div style="width:32px;height:32px;background:#2980fe;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;">TP</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-title">TokenPocket</div>
+          <div class="wallet-option-desc">多链数字钱包</div>
+        </div>
+      </div>
+      <div class="wallet-option" onclick="connectWallet('generic')" id="genericOption">
+        <div style="width:32px;height:32px;background:#10b981;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;">Web3</div>
+        <div class="wallet-option-info">
+          <div class="wallet-option-title">Web3 钱包</div>
+          <div class="wallet-option-desc">连接已检测到的钱包扩展</div>
+        </div>
+      </div>
     </div>
-    
-    <div class="title">🔥 踏马封神</div>
-    <div class="subtitle">Four.meme 税收代币合约</div>
+  </div>
+
+  <div class="card">
+    <div class="title">🔥 踏马封神 燃烧分红</div>
+    <div class="subtitle">Burn To Earn | 燃烧获取分红权</div>
 
     <div class="panel">
-      <div class="label">我的代币余额</div>
-      <div class="value highlight" id="tokenBalance">--</div>
+      <div>
+        <div class="label">我的可领取分红</div>
+        <div class="balance-tag" id="claimableUsd">≈ $0.00</div>
+      </div>
+      <div class="value" id="pending">0.00 BNB</div>
     </div>
-    
     <div class="panel">
-      <div class="label">代币符号</div>
-      <div class="value" id="tokenSymbol">--</div>
+      <div class="label">我已燃烧</div>
+      <div class="value" id="myburn">0 TAMA</div>
     </div>
-    
     <div class="panel">
-      <div class="label">税收比例</div>
-      <div class="value" id="taxRate">--</div>
+      <div class="label">全网总燃烧</div>
+      <div class="value" id="totalburn">0 TAMA</div>
     </div>
 
-    <div class="status-box" id="statusBox">
-      点击"连接钱包"查看合约信息
+    <div class="input-box">
+      <input id="amount" type="number" placeholder="输入燃烧数量" min="0" step="0.01"/>
+      <div class="balance-tag" style="text-align:right;margin-top:-8px;margin-bottom:8px;cursor:pointer;color:#3b82f6;" onclick="fillMax()">最大可用: <span id="maxAmount">0</span> TAMA</div>
     </div>
 
-    <div class="function-list" id="funcList" style="display:none">
-      <div style="font-size:14px;color:#9ca3af;margin-bottom:12px">合约功能检测：</div>
-      <div class="func-item available" id="funcBalance">✓ 查询余额 (balanceOf)</div>
-      <div class="func-item available" id="funcTransfer">✓ 转账 (transfer)</div>
-      <div class="func-item unavailable" id="funcBurn">✗ 燃烧领分红 (burn) - 本合约无此功能</div>
-      <div class="func-item unavailable" id="funcClaim">✗ 领取分红 (claim) - 本合约无此功能</div>
-    </div>
-    
-    <div style="margin-top:20px;font-size:12px;color:#6b7280;text-align:center">
-      合约地址: <span style="font-family:monospace">0x9a88...7777</span>
-    </div>
+    <button class="btn-burn" id="burnBtn" onclick="burn()">🔥 立即燃烧</button>
+    <button class="btn-claim" id="claimBtn" onclick="claim()">💰 领取分红</button>
   </div>
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/web3@1.10.3/dist/web3.min.js"></script>
 <script>
-// 配置
-const CONFIG = {
-  contractAddress: "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777",
-  chainId: 56,
-  chainName: "Binance Smart Chain",
-  rpcUrl: "https://bsc-dataseed.binance.org/"
-};
+const CONTRACT = "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777";
 
-// 修正后的ABI（只包含该合约实际存在的功能）
 const ABI = [
-  // 标准ERC20
-  {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},
-  {"constant":false,"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},
-  {"constant":false,"inputs":[{"name":"from","type":"address"},{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},
-  
-  // Four.meme 税收代币特有功能
-  {"constant":true,"inputs":[],"name":"taxRate","outputs":[{"name":"","type":"uint16"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[],"name":"taxSplitter","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},
-  {"constant":true,"inputs":[],"name":"QUOTE_TOKEN","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}
+  {"inputs":[{"name":"amount","type":"uint256"}],"name":"burn","stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"claim","stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"totalBurned","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"}
 ];
 
 let web3 = null;
+let account = null;
 let contract = null;
-let userAddress = null;
+let currentProvider = null;
 
-function showStatus(msg, isError) {
-  const box = document.getElementById('statusBox');
-  box.textContent = msg;
-  box.className = 'status-box ' + (isError ? 'error' : 'success');
+// 初始化检测钱包
+window.addEventListener('load', () => {
+  detectWallets();
+  // 如果之前有连接，尝试自动连接
+  if (localStorage.getItem('walletConnected') === 'true') {
+    autoConnect();
+  }
+});
+
+// 检测已安装的钱包
+function detectWallets() {
+  const hasMetaMask = window.ethereum?.isMetaMask || (window.ethereum?.providers?.some(p => p.isMetaMask));
+  const hasCoinbase = window.ethereum?.isCoinbaseWallet || (window.ethereum?.providers?.some(p => p.isCoinbaseWallet));
+  const hasTokenPocket = window.ethereum?.isTokenPocket;
+  
+  if (hasMetaMask) document.getElementById('metamaskOption').style.display = 'flex';
+  if (hasCoinbase) document.getElementById('coinbaseOption').style.display = 'flex';
+  if (hasTokenPocket) document.getElementById('tpOption').style.display = 'flex';
+  
+  // 至少显示通用选项
+  document.getElementById('genericOption').style.display = 'flex';
 }
 
-async function connectWallet() {
-  const btn = document.getElementById('connectBtn');
-  
+// 处理连接按钮点击
+function handleWalletClick() {
+  if (account) {
+    // 已连接，执行断开
+    disconnectWallet();
+  } else {
+    // 未连接，显示选择
+    document.getElementById('walletSelect').classList.add('show');
+  }
+}
+
+// 关闭钱包选择
+function closeWalletSelect(e) {
+  if (e.target === document.getElementById('walletSelect')) {
+    document.getElementById('walletSelect').classList.remove('show');
+  }
+}
+
+// 连接指定钱包
+async function connectWallet(type) {
   try {
-    if (!window.ethereum) {
-      alert('请安装MetaMask钱包！');
+    let provider = null;
+    
+    if (window.ethereum) {
+      if (window.ethereum.providers) {
+        // 有多个 provider
+        switch(type) {
+          case 'metamask':
+            provider = window.ethereum.providers.find(p => p.isMetaMask);
+            break;
+          case 'coinbase':
+            provider = window.ethereum.providers.find(p => p.isCoinbaseWallet);
+            break;
+          case 'tokenpocket':
+            provider = window.ethereum.providers.find(p => p.isTokenPocket);
+            break;
+          default:
+            provider = window.ethereum;
+        }
+      } else {
+        // 单个 provider
+        provider = window.ethereum;
+      }
+    }
+    
+    if (!provider) {
+      alert('请安装钱包扩展或刷新页面重试');
       return;
     }
     
-    btn.textContent = '连接中...';
-    btn.disabled = true;
+    currentProvider = provider;
+    web3 = new Web3(provider);
     
     // 请求连接
-    await ethereum.request({ method: 'eth_requestAccounts' });
+    const accounts = await provider.request({ method: 'eth_requestAccounts' });
+    account = accounts[0];
     
-    // 初始化web3
-    web3 = new Web3(ethereum);
-    
-    // 检查并切换网络
-    const chainId = await web3.eth.getChainId();
-    if (chainId !== CONFIG.chainId) {
-      try {
-        await ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x' + CONFIG.chainId.toString(16) }],
-        });
-      } catch (switchError) {
-        if (switchError.code === 4902) {
-          await ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: '0x' + CONFIG.chainId.toString(16),
-              chainName: CONFIG.chainName,
-              nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-              rpcUrls: [CONFIG.rpcUrl],
-              blockExplorerUrls: ['https://bscscan.com/']
-            }],
-          });
-        }
-      }
-      web3 = new Web3(ethereum);
-    }
-    
-    // 获取账户
-    const accounts = await web3.eth.getAccounts();
-    userAddress = accounts[0];
+    // 保存连接状态
+    localStorage.setItem('walletConnected', 'true');
+    localStorage.setItem('walletType', type);
     
     // 初始化合约
-    contract = new web3.eth.Contract(ABI, CONFIG.contractAddress);
+    contract = new web3.eth.Contract(ABI, CONTRACT);
     
     // 更新UI
-    document.getElementById('walletStatus').textContent = 
-      userAddress.slice(0,6) + '...' + userAddress.slice(-4);
-    btn.textContent = '已连接';
-    
-    // 显示功能列表
-    document.getElementById('funcList').style.display = 'block';
+    updateWalletUI();
     
     // 加载数据
-    await loadTokenData();
+    await loadData();
     
-    showStatus('连接成功！这是一个Four.meme标准税收代币合约，不支持燃烧领分红功能。', false);
+    // 监听事件
+    setupListeners(provider);
     
-    // 监听账户变化
-    ethereum.on('accountsChanged', (accounts) => {
-      if (accounts.length === 0) window.location.reload();
-      else {
-        userAddress = accounts[0];
-        loadTokenData();
-      }
-    });
+    document.getElementById('walletSelect').classList.remove('show');
     
-  } catch (error) {
-    console.error(error);
-    btn.textContent = '连接失败';
-    showStatus('错误: ' + error.message, true);
-    setTimeout(() => {
-      btn.textContent = '连接钱包';
-      btn.disabled = false;
-    }, 2000);
+  } catch (err) {
+    console.error('连接失败:', err);
+    alert('连接失败: ' + (err.message || '用户拒绝连接'));
   }
 }
 
-async function loadTokenData() {
+// 自动连接（刷新后）
+async function autoConnect() {
+  const type = localStorage.getItem('walletType') || 'generic';
+  await connectWallet(type);
+}
+
+// 断开连接
+function disconnectWallet() {
+  account = null;
+  web3 = null;
+  contract = null;
+  currentProvider = null;
+  localStorage.removeItem('walletConnected');
+  localStorage.removeItem('walletType');
+  
+  document.getElementById('statusDot').classList.remove('connected');
+  document.getElementById('statusText').textContent = '未连接钱包';
+  document.getElementById('connectBtn').textContent = '连接钱包';
+  document.getElementById('connectBtn').classList.remove('disconnect');
+  document.getElementById('walletInfo').style.display = 'none';
+  
+  // 重置数据
+  document.getElementById('pending').textContent = '0.00 BNB';
+  document.getElementById('myburn').textContent = '0 TAMA';
+  document.getElementById('totalburn').textContent = '0 TAMA';
+  document.getElementById('tokenBalance').textContent = '余额: -- TAMA';
+}
+
+// 更新钱包UI
+async function updateWalletUI() {
+  if (!account) return;
+  
+  const shortAddr = account.slice(0, 6) + '...' + account.slice(-4);
+  document.getElementById('statusDot').classList.add('connected');
+  document.getElementById('statusText').textContent = shortAddr;
+  document.getElementById('connectBtn').textContent = '断开连接';
+  document.getElementById('connectBtn').classList.add('disconnect');
+  document.getElementById('walletInfo').style.display = 'flex';
+  
+  // 获取网络
+  const chainId = await web3.eth.getChainId();
+  const networkNames = {
+    56: 'BSC Mainnet',
+    97: 'BSC Testnet',
+    1: 'Ethereum',
+    5: 'Goerli'
+  };
+  document.getElementById('networkName').textContent = networkNames[chainId] || `ChainID: ${chainId}`;
+}
+
+// 加载合约数据
+async function loadData() {
+  if (!contract || !account) return;
+  
   try {
-    // 查询余额
-    const balance = await contract.methods.balanceOf(userAddress).call();
-    const decimals = await contract.methods.decimals().call();
-    const symbol = await contract.methods.symbol().call();
+    // 获取可领取分红
+    const claimable = await contract.methods.claimable(account).call();
+    const claimableEth = web3.utils.fromWei(claimable, 'ether');
+    document.getElementById('pending').textContent = parseFloat(claimableEth).toFixed(4) + ' BNB';
+    document.getElementById('claimableUsd').textContent = '≈ $' + (parseFloat(claimableEth) * 300).toFixed(2); // 假设 BNB $300
     
-    const balanceFormatted = balance / (10 ** decimals);
-    document.getElementById('tokenBalance').textContent = 
-      balanceFormatted.toFixed(4) + ' ' + symbol;
-    document.getElementById('tokenSymbol').textContent = symbol;
+    // 获取已燃烧数量
+    const burned = await contract.methods.burnAmount(account).call();
+    document.getElementById('myburn').textContent = web3.utils.fromWei(burned, 'ether') + ' TAMA';
     
-    // 查询税率（如果合约支持）
-    try {
-      const tax = await contract.methods.taxRate().call();
-      document.getElementById('taxRate').textContent = (tax / 100) + '%';
-    } catch(e) {
-      document.getElementById('taxRate').textContent = '未知';
-    }
+    // 获取总燃烧
+    const total = await contract.methods.totalBurned().call();
+    document.getElementById('totalburn').textContent = web3.utils.fromWei(total, 'ether') + ' TAMA';
     
-  } catch (error) {
-    console.error('加载数据失败:', error);
-    showStatus('加载数据失败: ' + error.message, true);
+    // 获取代币余额
+    const balance = await contract.methods.balanceOf(account).call();
+    const balanceEth = web3.utils.fromWei(balance, 'ether');
+    document.getElementById('tokenBalance').textContent = `余额: ${parseFloat(balanceEth).toFixed(2)} TAMA`;
+    document.getElementById('maxAmount').textContent = parseFloat(balanceEth).toFixed(2);
+    
+  } catch (err) {
+    console.error('加载数据失败:', err);
   }
 }
+
+// 设置事件监听
+function setupListeners(provider) {
+  // 账户切换
+  provider.on('accountsChanged', (accounts) => {
+    if (accounts.length === 0) {
+      disconnectWallet();
+    } else {
+      account = accounts[0];
+      updateWalletUI();
+      loadData();
+    }
+  });
+  
+  // 网络切换
+  provider.on('chainChanged', () => {
+    window.location.reload();
+  });
+  
+  // 断开连接（部分钱包支持）
+  provider.on('disconnect', () => {
+    disconnectWallet();
+  });
+}
+
+// 填充最大数量
+function fillMax() {
+  const max = document.getElementById('maxAmount').textContent;
+  if (max && max !== '0') {
+    document.getElementById('amount').value = max;
+  }
+}
+
+async function burn(){
+  if (!account) {
+    document.getElementById('walletSelect').classList.add('show');
+    return;
+  }
+  
+  const amt = document.getElementById("amount").value;
+  if(!amt || amt <= 0) return alert("请输入燃烧数量");
+  
+  const btn = document.getElementById('burnBtn');
+  btn.innerHTML = '<span class="loading"></span> 处理中...';
+  btn.disabled = true;
+  
+  try {
+    const val = web3.utils.toWei(amt, "ether");
+    await contract.methods.burn(val).send({from: account})
+      .on("transactionHash", h => {
+        alert("提交成功，等待确认...\nHash: " + h.slice(0, 10) + "...");
+      })
+      .on("receipt", () => {
+        alert("✅ 燃烧成功！获得分红权");
+        loadData(); // 刷新数据
+        document.getElementById("amount").value = '';
+      });
+  } catch (err) {
+    alert('交易失败: ' + (err.message || '用户取消'));
+  } finally {
+    btn.innerHTML = '🔥 立即燃烧';
+    btn.disabled = false;
+  }
+}
+
+async function claim(){
+  if (!account) {
+    document.getElementById('walletSelect').classList.add('show');
+    return;
+  }
+  
+  const btn = document.getElementById('claimBtn');
+  btn.innerHTML = '<span class="loading"></span> 领取中...';
+  btn.disabled = true;
+  
+  try {
+    await contract.methods.claim().send({from: account})
+      .on("transactionHash", h => {
+        alert("提交成功，等待确认...\nHash: " + h.slice(0, 10) + "...");
+      })
+      .on("receipt", () => {
+        alert("✅ 分红领取成功！");
+        loadData(); // 刷新数据
+      });
+  } catch (err) {
+    alert('领取失败: ' + (err.message || '用户取消'));
+  } finally {
+    btn.innerHTML = '💰 领取分红';
+    btn.disabled = false;
+  }
+}
+
+// 定时刷新数据（每10秒）
+setInterval(() => {
+  if (account) loadData();
+}, 10000);
 </script>
 </body>
 </html>
