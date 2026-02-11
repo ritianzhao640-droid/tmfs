@@ -9,7 +9,6 @@
     body{background:#0b0f17;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
     .container{max-width:420px;margin:0 auto;padding:25px}
     
-    /* 钱包状态栏样式 */
     .wallet-bar {
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       border: 1px solid #334155;
@@ -53,7 +52,6 @@
     }
     .wallet-btn:hover {
       background: #2563eb;
-      transform: translateY(-1px);
     }
     .wallet-btn.disconnect {
       background: #475569;
@@ -109,9 +107,15 @@
       border-color: #3b82f6;
       background: #1e293b;
     }
-    .wallet-option img {
+    .wallet-option div:first-child {
       width: 32px;
       height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
     }
     .wallet-option-info {
       flex: 1;
@@ -145,6 +149,11 @@
       color: #64748b;
       margin-top: 4px;
     }
+    .error-text {
+      color: #ef4444;
+      font-size: 11px;
+      margin-top: 4px;
+    }
     .loading {
       display: inline-block;
       width: 16px;
@@ -171,7 +180,7 @@
     <button class="wallet-btn" id="connectBtn" onclick="handleWalletClick()">连接钱包</button>
     <div class="wallet-info" id="walletInfo" style="display:none;">
       <span id="networkName">--</span>
-      <span id="tokenBalance">余额: -- TAMA</span>
+      <span id="tokenBalance">余额: 加载中...</span>
     </div>
   </div>
 
@@ -180,28 +189,28 @@
     <div class="wallet-modal" onclick="event.stopPropagation()">
       <h3>选择钱包</h3>
       <div class="wallet-option" onclick="connectWallet('metamask')" id="metamaskOption" style="display:none;">
-        <div style="width:32px;height:32px;background:#e2761b;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;">M</div>
+        <div style="background:#e2761b;">M</div>
         <div class="wallet-option-info">
           <div class="wallet-option-title">MetaMask</div>
           <div class="wallet-option-desc">最流行的以太坊钱包</div>
         </div>
       </div>
       <div class="wallet-option" onclick="connectWallet('coinbase')" id="coinbaseOption" style="display:none;">
-        <div style="width:32px;height:32px;background:#0052ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;">C</div>
+        <div style="background:#0052ff;">C</div>
         <div class="wallet-option-info">
           <div class="wallet-option-title">Coinbase Wallet</div>
           <div class="wallet-option-desc">Coinbase 官方钱包</div>
         </div>
       </div>
       <div class="wallet-option" onclick="connectWallet('tokenpocket')" id="tpOption" style="display:none;">
-        <div style="width:32px;height:32px;background:#2980fe;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#fff;">TP</div>
+        <div style="background:#2980fe;">TP</div>
         <div class="wallet-option-info">
           <div class="wallet-option-title">TokenPocket</div>
           <div class="wallet-option-desc">多链数字钱包</div>
         </div>
       </div>
       <div class="wallet-option" onclick="connectWallet('generic')" id="genericOption">
-        <div style="width:32px;height:32px;background:#10b981;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;">Web3</div>
+        <div style="background:#10b981;">Web3</div>
         <div class="wallet-option-info">
           <div class="wallet-option-title">Web3 钱包</div>
           <div class="wallet-option-desc">连接已检测到的钱包扩展</div>
@@ -245,13 +254,18 @@
 <script>
 const CONTRACT = "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777";
 
+// 修复后的 ABI - 包含标准 ERC20 balanceOf
 const ABI = [
+  // 燃烧功能
   {"inputs":[{"name":"amount","type":"uint256"}],"name":"burn","stateMutability":"nonpayable","type":"function"},
   {"inputs":[],"name":"claim","stateMutability":"nonpayable","type":"function"},
-  {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[],"name":"totalBurned","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"},
-  {"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"type":"uint256"}],"stateMutability":"view","type":"function"}
+  {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"totalBurned","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  // 标准 ERC20 余额查询 - 使用标准格式
+  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
+  // 如果上面的不行，试试这个格式（有些合约用 account 而不是 _owner）
+  {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}
 ];
 
 let web3 = null;
@@ -259,16 +273,13 @@ let account = null;
 let contract = null;
 let currentProvider = null;
 
-// 初始化检测钱包
 window.addEventListener('load', () => {
   detectWallets();
-  // 如果之前有连接，尝试自动连接
   if (localStorage.getItem('walletConnected') === 'true') {
     autoConnect();
   }
 });
 
-// 检测已安装的钱包
 function detectWallets() {
   const hasMetaMask = window.ethereum?.isMetaMask || (window.ethereum?.providers?.some(p => p.isMetaMask));
   const hasCoinbase = window.ethereum?.isCoinbaseWallet || (window.ethereum?.providers?.some(p => p.isCoinbaseWallet));
@@ -277,37 +288,29 @@ function detectWallets() {
   if (hasMetaMask) document.getElementById('metamaskOption').style.display = 'flex';
   if (hasCoinbase) document.getElementById('coinbaseOption').style.display = 'flex';
   if (hasTokenPocket) document.getElementById('tpOption').style.display = 'flex';
-  
-  // 至少显示通用选项
   document.getElementById('genericOption').style.display = 'flex';
 }
 
-// 处理连接按钮点击
 function handleWalletClick() {
   if (account) {
-    // 已连接，执行断开
     disconnectWallet();
   } else {
-    // 未连接，显示选择
     document.getElementById('walletSelect').classList.add('show');
   }
 }
 
-// 关闭钱包选择
 function closeWalletSelect(e) {
   if (e.target === document.getElementById('walletSelect')) {
     document.getElementById('walletSelect').classList.remove('show');
   }
 }
 
-// 连接指定钱包
 async function connectWallet(type) {
   try {
     let provider = null;
     
     if (window.ethereum) {
       if (window.ethereum.providers) {
-        // 有多个 provider
         switch(type) {
           case 'metamask':
             provider = window.ethereum.providers.find(p => p.isMetaMask);
@@ -322,7 +325,6 @@ async function connectWallet(type) {
             provider = window.ethereum;
         }
       } else {
-        // 单个 provider
         provider = window.ethereum;
       }
     }
@@ -335,24 +337,16 @@ async function connectWallet(type) {
     currentProvider = provider;
     web3 = new Web3(provider);
     
-    // 请求连接
     const accounts = await provider.request({ method: 'eth_requestAccounts' });
     account = accounts[0];
     
-    // 保存连接状态
     localStorage.setItem('walletConnected', 'true');
     localStorage.setItem('walletType', type);
     
-    // 初始化合约
     contract = new web3.eth.Contract(ABI, CONTRACT);
     
-    // 更新UI
     updateWalletUI();
-    
-    // 加载数据
     await loadData();
-    
-    // 监听事件
     setupListeners(provider);
     
     document.getElementById('walletSelect').classList.remove('show');
@@ -363,13 +357,11 @@ async function connectWallet(type) {
   }
 }
 
-// 自动连接（刷新后）
 async function autoConnect() {
   const type = localStorage.getItem('walletType') || 'generic';
   await connectWallet(type);
 }
 
-// 断开连接
 function disconnectWallet() {
   account = null;
   web3 = null;
@@ -384,14 +376,12 @@ function disconnectWallet() {
   document.getElementById('connectBtn').classList.remove('disconnect');
   document.getElementById('walletInfo').style.display = 'none';
   
-  // 重置数据
   document.getElementById('pending').textContent = '0.00 BNB';
   document.getElementById('myburn').textContent = '0 TAMA';
   document.getElementById('totalburn').textContent = '0 TAMA';
   document.getElementById('tokenBalance').textContent = '余额: -- TAMA';
 }
 
-// 更新钱包UI
 async function updateWalletUI() {
   if (!account) return;
   
@@ -402,7 +392,6 @@ async function updateWalletUI() {
   document.getElementById('connectBtn').classList.add('disconnect');
   document.getElementById('walletInfo').style.display = 'flex';
   
-  // 获取网络
   const chainId = await web3.eth.getChainId();
   const networkNames = {
     56: 'BSC Mainnet',
@@ -413,39 +402,57 @@ async function updateWalletUI() {
   document.getElementById('networkName').textContent = networkNames[chainId] || `ChainID: ${chainId}`;
 }
 
-// 加载合约数据
 async function loadData() {
   if (!contract || !account) return;
   
-  try {
-    // 获取可领取分红
-    const claimable = await contract.methods.claimable(account).call();
-    const claimableEth = web3.utils.fromWei(claimable, 'ether');
-    document.getElementById('pending').textContent = parseFloat(claimableEth).toFixed(4) + ' BNB';
-    document.getElementById('claimableUsd').textContent = '≈ $' + (parseFloat(claimableEth) * 300).toFixed(2); // 假设 BNB $300
+  // 分别查询，互不干扰
+  const tasks = [
+    // 1. 查询可领取分红
+    contract.methods.claimable(account).call().then(claimable => {
+      const claimableEth = web3.utils.fromWei(claimable, 'ether');
+      document.getElementById('pending').textContent = parseFloat(claimableEth).toFixed(4) + ' BNB';
+      document.getElementById('claimableUsd').textContent = '≈ $' + (parseFloat(claimableEth) * 300).toFixed(2);
+    }).catch(err => {
+      console.log('claimable 查询失败:', err);
+      document.getElementById('pending').textContent = '查询失败';
+    }),
     
-    // 获取已燃烧数量
-    const burned = await contract.methods.burnAmount(account).call();
-    document.getElementById('myburn').textContent = web3.utils.fromWei(burned, 'ether') + ' TAMA';
+    // 2. 查询已燃烧数量
+    contract.methods.burnAmount(account).call().then(burned => {
+      document.getElementById('myburn').textContent = web3.utils.fromWei(burned, 'ether') + ' TAMA';
+    }).catch(err => {
+      console.log('burnAmount 查询失败:', err);
+      document.getElementById('myburn').textContent = '查询失败';
+    }),
     
-    // 获取总燃烧
-    const total = await contract.methods.totalBurned().call();
-    document.getElementById('totalburn').textContent = web3.utils.fromWei(total, 'ether') + ' TAMA';
+    // 3. 查询全网总燃烧
+    contract.methods.totalBurned().call().then(total => {
+      document.getElementById('totalburn').textContent = web3.utils.fromWei(total, 'ether') + ' TAMA';
+    }).catch(err => {
+      console.log('totalBurned 查询失败:', err);
+      document.getElementById('totalburn').textContent = '查询失败';
+    }),
     
-    // 获取代币余额
-    const balance = await contract.methods.balanceOf(account).call();
-    const balanceEth = web3.utils.fromWei(balance, 'ether');
-    document.getElementById('tokenBalance').textContent = `余额: ${parseFloat(balanceEth).toFixed(2)} TAMA`;
-    document.getElementById('maxAmount').textContent = parseFloat(balanceEth).toFixed(2);
-    
-  } catch (err) {
-    console.error('加载数据失败:', err);
-  }
+    // 4. 查询代币余额（使用 try-catch 防止 ABI 不匹配）
+    (async () => {
+      try {
+        // 先尝试标准格式 _owner
+        let balance = await contract.methods.balanceOf(account).call();
+        const balanceEth = web3.utils.fromWei(balance, 'ether');
+        document.getElementById('tokenBalance').textContent = `余额: ${parseFloat(balanceEth).toFixed(2)} TAMA`;
+        document.getElementById('maxAmount').textContent = parseFloat(balanceEth).toFixed(2);
+      } catch (err) {
+        console.error('balanceOf 查询失败:', err);
+        document.getElementById('tokenBalance').textContent = '余额: 查询失败';
+        document.getElementById('maxAmount').textContent = '0';
+      }
+    })()
+  ];
+  
+  await Promise.all(tasks);
 }
 
-// 设置事件监听
 function setupListeners(provider) {
-  // 账户切换
   provider.on('accountsChanged', (accounts) => {
     if (accounts.length === 0) {
       disconnectWallet();
@@ -456,21 +463,18 @@ function setupListeners(provider) {
     }
   });
   
-  // 网络切换
   provider.on('chainChanged', () => {
     window.location.reload();
   });
   
-  // 断开连接（部分钱包支持）
   provider.on('disconnect', () => {
     disconnectWallet();
   });
 }
 
-// 填充最大数量
 function fillMax() {
   const max = document.getElementById('maxAmount').textContent;
-  if (max && max !== '0') {
+  if (max && max !== '0' && max !== '查询失败') {
     document.getElementById('amount').value = max;
   }
 }
@@ -496,7 +500,7 @@ async function burn(){
       })
       .on("receipt", () => {
         alert("✅ 燃烧成功！获得分红权");
-        loadData(); // 刷新数据
+        loadData();
         document.getElementById("amount").value = '';
       });
   } catch (err) {
@@ -524,7 +528,7 @@ async function claim(){
       })
       .on("receipt", () => {
         alert("✅ 分红领取成功！");
-        loadData(); // 刷新数据
+        loadData();
       });
   } catch (err) {
     alert('领取失败: ' + (err.message || '用户取消'));
@@ -534,7 +538,6 @@ async function claim(){
   }
 }
 
-// 定时刷新数据（每10秒）
 setInterval(() => {
   if (account) loadData();
 }, 10000);
