@@ -149,11 +149,6 @@
       color: #64748b;
       margin-top: 4px;
     }
-    .error-text {
-      color: #ef4444;
-      font-size: 11px;
-      margin-top: 4px;
-    }
     .loading {
       display: inline-block;
       width: 16px;
@@ -232,16 +227,16 @@
     </div>
     <div class="panel">
       <div class="label">我已燃烧</div>
-      <div class="value" id="myburn">0 TAMA</div>
+      <div class="value" id="myburn">0 踏马封神</div>
     </div>
     <div class="panel">
       <div class="label">全网总燃烧</div>
-      <div class="value" id="totalburn">0 TAMA</div>
+      <div class="value" id="totalburn">0 踏马封神</div>
     </div>
 
     <div class="input-box">
       <input id="amount" type="number" placeholder="输入燃烧数量" min="0" step="0.01"/>
-      <div class="balance-tag" style="text-align:right;margin-top:-8px;margin-bottom:8px;cursor:pointer;color:#3b82f6;" onclick="fillMax()">最大可用: <span id="maxAmount">0</span> TAMA</div>
+      <div class="balance-tag" style="text-align:right;margin-top:-8px;margin-bottom:8px;cursor:pointer;color:#3b82f6;" onclick="fillMax()">最大可用: <span id="maxAmount">0</span> 踏马封神</div>
     </div>
 
     <button class="btn-burn" id="burnBtn" onclick="burn()">🔥 立即燃烧</button>
@@ -254,18 +249,14 @@
 <script>
 const CONTRACT = "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777";
 
-// 修复后的 ABI - 包含标准 ERC20 balanceOf
+// ABI 包含标准 ERC20 balanceOf
 const ABI = [
-  // 燃烧功能
   {"inputs":[{"name":"amount","type":"uint256"}],"name":"burn","stateMutability":"nonpayable","type":"function"},
   {"inputs":[],"name":"claim","stateMutability":"nonpayable","type":"function"},
   {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
   {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
   {"inputs":[],"name":"totalBurned","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-  // 标准 ERC20 余额查询 - 使用标准格式
-  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
-  // 如果上面的不行，试试这个格式（有些合约用 account 而不是 _owner）
-  {"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}
+  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}
 ];
 
 let web3 = null;
@@ -377,9 +368,9 @@ function disconnectWallet() {
   document.getElementById('walletInfo').style.display = 'none';
   
   document.getElementById('pending').textContent = '0.00 BNB';
-  document.getElementById('myburn').textContent = '0 TAMA';
-  document.getElementById('totalburn').textContent = '0 TAMA';
-  document.getElementById('tokenBalance').textContent = '余额: -- TAMA';
+  document.getElementById('myburn').textContent = '0 踏马封神';
+  document.getElementById('totalburn').textContent = '0 踏马封神';
+  document.getElementById('tokenBalance').textContent = '余额: -- 踏马封神';
 }
 
 async function updateWalletUI() {
@@ -406,7 +397,7 @@ async function loadData() {
   if (!contract || !account) return;
   
   // 分别查询，互不干扰
-  const tasks = [
+  await Promise.all([
     // 1. 查询可领取分红
     contract.methods.claimable(account).call().then(claimable => {
       const claimableEth = web3.utils.fromWei(claimable, 'ether');
@@ -414,42 +405,35 @@ async function loadData() {
       document.getElementById('claimableUsd').textContent = '≈ $' + (parseFloat(claimableEth) * 300).toFixed(2);
     }).catch(err => {
       console.log('claimable 查询失败:', err);
-      document.getElementById('pending').textContent = '查询失败';
     }),
     
     // 2. 查询已燃烧数量
     contract.methods.burnAmount(account).call().then(burned => {
-      document.getElementById('myburn').textContent = web3.utils.fromWei(burned, 'ether') + ' TAMA';
+      document.getElementById('myburn').textContent = web3.utils.fromWei(burned, 'ether') + ' 踏马封神';
     }).catch(err => {
       console.log('burnAmount 查询失败:', err);
-      document.getElementById('myburn').textContent = '查询失败';
+      document.getElementById('myburn').textContent = '0 踏马封神';
     }),
     
     // 3. 查询全网总燃烧
     contract.methods.totalBurned().call().then(total => {
-      document.getElementById('totalburn').textContent = web3.utils.fromWei(total, 'ether') + ' TAMA';
+      document.getElementById('totalburn').textContent = web3.utils.fromWei(total, 'ether') + ' 踏马封神';
     }).catch(err => {
       console.log('totalBurned 查询失败:', err);
-      document.getElementById('totalburn').textContent = '查询失败';
+      document.getElementById('totalburn').textContent = '0 踏马封神';
     }),
     
-    // 4. 查询代币余额（使用 try-catch 防止 ABI 不匹配）
-    (async () => {
-      try {
-        // 先尝试标准格式 _owner
-        let balance = await contract.methods.balanceOf(account).call();
-        const balanceEth = web3.utils.fromWei(balance, 'ether');
-        document.getElementById('tokenBalance').textContent = `余额: ${parseFloat(balanceEth).toFixed(2)} TAMA`;
-        document.getElementById('maxAmount').textContent = parseFloat(balanceEth).toFixed(2);
-      } catch (err) {
-        console.error('balanceOf 查询失败:', err);
-        document.getElementById('tokenBalance').textContent = '余额: 查询失败';
-        document.getElementById('maxAmount').textContent = '0';
-      }
-    })()
-  ];
-  
-  await Promise.all(tasks);
+    // 4. 查询代币余额
+    contract.methods.balanceOf(account).call().then(balance => {
+      const balanceEth = web3.utils.fromWei(balance, 'ether');
+      document.getElementById('tokenBalance').textContent = `余额: ${parseFloat(balanceEth).toFixed(2)} 踏马封神`;
+      document.getElementById('maxAmount').textContent = parseFloat(balanceEth).toFixed(2);
+    }).catch(err => {
+      console.error('balanceOf 查询失败:', err);
+      document.getElementById('tokenBalance').textContent = '余额: 查询失败';
+      document.getElementById('maxAmount').textContent = '0';
+    })
+  ]);
 }
 
 function setupListeners(provider) {
