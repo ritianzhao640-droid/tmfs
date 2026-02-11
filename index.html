@@ -2,106 +2,303 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>调试 - 踏马封神合约</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>踏马封神 - 燃烧分红</title>
   <style>
-    body{background:#0b0f17;color:#fff;font-family:system-ui;padding:20px}
-    .log{background:#1e293b;padding:10px;margin:10px 0;border-radius:8px;font-family:monospace;font-size:13px}
-    .error{color:#ef4444}
-    .success{color:#10b981}
-    button{background:#3b82f6;color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;margin:5px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0b0f17;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+    .container{max-width:420px;margin:0 auto;padding:25px}
+    
+    .wallet-bar {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .wallet-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      transition: all 0.3s;
+    }
+    .status-dot.connected {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .wallet-btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .wallet-btn.disconnect {
+      background: #475569;
+    }
+    .wallet-info {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .card{background:#121a29;border-radius:16px;padding:24px;margin-bottom:16px}
+    .title{font-size:22px;font-weight:700;color:#ffdf4f;margin-bottom:6px}
+    .subtitle{color:#9ca3af;font-size:14px;margin-bottom:20px}
+    .input-box{position:relative}
+    input{width:100%;background:#1e293b;border:none;border-radius:12px;padding:14px 16px;color:#fff;font-size:16px;margin-bottom:12px}
+    button{width:100%;padding:16px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer}
+    .btn-burn{background:#ef4444;color:#fff;margin-bottom:8px}
+    .btn-burn:hover{background:#dc2626}
+    .btn-claim{background:#10b981;color:#fff}
+    .btn-claim:hover{background:#059669}
+    .btn-claim:disabled{background:#334155;cursor:not-allowed}
+    .panel{display:flex;justify-content:space-between;background:#111827;padding:14px 16px;border-radius:12px;margin-bottom:10px;align-items:center}
+    .label{color:#9ca3af;font-size:13px}
+    .value{color:#fff;font-weight:600;font-size:16px}
+    .balance-tag{font-size:11px;color:#64748b;margin-top:4px}
+    .max-btn{text-align:right;margin-top:-8px;margin-bottom:8px;cursor:pointer;color:#3b82f6;font-size:13px}
+    .loading{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin-left:8px;vertical-align:middle}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-  <h2>🔍 合约调试工具</h2>
-  <button onclick="checkNetwork()">1. 检查网络</button>
-  <button onclick="checkContract()">2. 检查合约</button>
-  <button onclick="checkBalance()">3. 查询余额</button>
-  <div id="logs"></div>
+<div class="container">
+
+  <div class="wallet-bar" id="walletBar">
+    <div class="wallet-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">未连接钱包</span>
+    </div>
+    <button class="wallet-btn" id="connectBtn" onclick="toggleWallet()">连接钱包</button>
+    <div class="wallet-info" id="walletInfo" style="display:none;">
+      <span id="networkName">--</span>
+      <span id="tokenBalance">余额: -- 踏马封神</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="title">🔥 踏马封神 燃烧分红</div>
+    <div class="subtitle">Burn To Earn | 燃烧获取分红权</div>
+
+    <div class="panel">
+      <div>
+        <div class="label">我的可领取分红</div>
+        <div class="balance-tag" id="claimableUsd">≈ $0.00</div>
+      </div>
+      <div class="value" id="pending">0.00 BNB</div>
+    </div>
+    <div class="panel">
+      <div class="label">我已燃烧</div>
+      <div class="value" id="myburn">0 踏马封神</div>
+    </div>
+    <div class="panel">
+      <div class="label">全网总燃烧</div>
+      <div class="value" id="totalburn">0 踏马封神</div>
+    </div>
+
+    <div class="input-box">
+      <input id="amount" type="number" placeholder="输入燃烧数量" min="0" step="0.01"/>
+      <div class="max-btn" onclick="setMax()">最大可用: <span id="maxAmount">0</span> 踏马封神</div>
+    </div>
+
+    <button class="btn-burn" id="burnBtn" onclick="burn()">🔥 立即燃烧</button>
+    <button class="btn-claim" id="claimBtn" onclick="claim()">💰 领取分红</button>
+  </div>
+
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/web3@1.10.3/dist/web3.min.js"></script>
 <script>
 const CONTRACT = "0x9a889E525FAEF4851bf5BEbfb5F294AC9D097777";
-const ACCOUNT = "0xd9ed...517f"; // 换成您的真实地址，或者连接钱包后自动获取
 
-function log(msg, type='info') {
-  const div = document.createElement('div');
-  div.className = 'log ' + type;
-  div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${msg}`;
-  document.getElementById('logs').prepend(div);
-}
+// 完整的 ABI（包含 ERC20 标准和燃烧分红功能）
+const ABI = [
+  // ERC20 标准
+  {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
+  {"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},
+  {"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},
+  // 燃烧分红功能
+  {"inputs":[{"name":"amount","type":"uint256"}],"name":"burn","stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"claim","stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"name":"user","type":"address"}],"name":"claimable","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"name":"user","type":"address"}],"name":"burnAmount","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"totalBurned","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+];
 
-async function checkNetwork() {
-  if (!window.ethereum) {
-    log('❌ 未检测到钱包插件，请安装 MetaMask 或 TokenPocket', 'error');
-    return;
-  }
-  
-  const web3 = new Web3(window.ethereum);
-  const chainId = await web3.eth.getChainId();
-  const networks = {56:'BSC Mainnet', 97:'BSC Testnet', 1:'Ethereum', 5:'Goerli'};
-  
-  log(`当前网络: ${networks[chainId] || 'Unknown'} (ChainID: ${chainId})`);
-  
-  if (chainId !== 56) {
-    log('⚠️ 警告：您不在 BSC 主网！请切换到 BSC Mainnet', 'error');
+let web3 = null;
+let account = null;
+let contract = null;
+
+async function toggleWallet() {
+  if (account) {
+    disconnect();
   } else {
-    log('✅ 网络正确：BSC Mainnet', 'success');
+    connect();
   }
 }
 
-async function checkContract() {
+async function connect() {
   try {
-    const web3 = new Web3(window.ethereum);
-    const code = await web3.eth.getCode(CONTRACT);
-    
-    if (code === '0x' || code === '0x0') {
-      log('❌ 合约地址无效：该地址没有部署合约', 'error');
-    } else {
-      log(`✅ 合约存在，代码长度: ${code.length} 字节`, 'success');
-      log('合约代码前100字符: ' + code.substring(0, 100) + '...');
+    if (!window.ethereum) {
+      alert('请使用 TokenPocket、MetaMask 或 OKX 钱包打开');
+      return;
     }
+    
+    web3 = new Web3(window.ethereum);
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    account = accounts[0];
+    
+    contract = new web3.eth.Contract(ABI, CONTRACT);
+    
+    // 更新 UI
+    document.getElementById('statusDot').classList.add('connected');
+    document.getElementById('statusText').textContent = account.slice(0, 6) + '...' + account.slice(-4);
+    document.getElementById('connectBtn').textContent = '断开连接';
+    document.getElementById('connectBtn').classList.add('disconnect');
+    document.getElementById('walletInfo').style.display = 'flex';
+    
+    // 获取网络
+    const chainId = await web3.eth.getChainId();
+    const names = {56: 'BSC Mainnet', 97: 'BSC Testnet', 1: 'Ethereum'};
+    document.getElementById('networkName').textContent = names[chainId] || 'Chain ' + chainId;
+    
+    // 加载数据
+    await loadData();
+    
+    // 监听切换
+    window.ethereum.on('accountsChanged', (accs) => {
+      if (accs.length === 0) disconnect();
+      else { account = accs[0]; loadData(); }
+    });
+    
+    localStorage.setItem('walletConnected', 'true');
+    
   } catch (err) {
-    log('❌ 检查合约失败: ' + err.message, 'error');
+    alert('连接失败: ' + err.message);
   }
 }
 
-async function checkBalance() {
+function disconnect() {
+  account = null;
+  contract = null;
+  localStorage.removeItem('walletConnected');
+  document.getElementById('statusDot').classList.remove('connected');
+  document.getElementById('statusText').textContent = '未连接钱包';
+  document.getElementById('connectBtn').textContent = '连接钱包';
+  document.getElementById('connectBtn').classList.remove('disconnect');
+  document.getElementById('walletInfo').style.display = 'none';
+}
+
+async function loadData() {
+  if (!contract || !account) return;
+  
   try {
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const web3 = new Web3(window.ethereum);
-    const accounts = await web3.eth.getAccounts();
-    const account = accounts[0];
+    // 余额
+    const bal = await contract.methods.balanceOf(account).call();
+    const balEth = parseFloat(web3.utils.fromWei(bal, 'ether')).toFixed(2);
+    document.getElementById('tokenBalance').textContent = `余额: ${balEth} 踏马封神`;
+    document.getElementById('maxAmount').textContent = balEth;
     
-    log(`当前钱包地址: ${account}`);
+    // 可领取分红
+    const claimable = await contract.methods.claimable(account).call();
+    const claimEth = parseFloat(web3.utils.fromWei(claimable, 'ether')).toFixed(4);
+    document.getElementById('pending').textContent = claimEth + ' BNB';
+    document.getElementById('claimableUsd').textContent = '≈ $' + (claimEth * 300).toFixed(2);
     
-    // 尝试多种 ABI 格式
-    const abis = [
-      // 标准 ERC20
-      [{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"}],
-      // 有些合约用 account 而不是 _owner
-      [{"constant":true,"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"}],
-      // 最简单的格式
-      [{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]
-    ];
+    // 已燃烧
+    const burned = await contract.methods.burnAmount(account).call();
+    document.getElementById('myburn').textContent = web3.utils.fromWei(burned, 'ether') + ' 踏马封神';
     
-    for (let i = 0; i < abis.length; i++) {
-      try {
-        const contract = new web3.eth.Contract(abis[i], CONTRACT);
-        const balance = await contract.methods.balanceOf(account).call();
-        const balanceEth = web3.utils.fromWei(balance, 'ether');
-        log(`✅ ABI 格式 ${i+1} 成功！余额: ${balanceEth} 踏马封神`, 'success');
-        return;
-      } catch (e) {
-        log(`❌ ABI 格式 ${i+1} 失败: ${e.message}`, 'error');
-      }
-    }
-    
-    log('所有 ABI 格式都失败，请检查合约是否包含 balanceOf 函数', 'error');
+    // 总燃烧
+    const total = await contract.methods.totalBurned().call();
+    document.getElementById('totalburn').textContent = web3.utils.fromWei(total, 'ether') + ' 踏马封神';
     
   } catch (err) {
-    log('❌ 连接钱包失败: ' + err.message, 'error');
+    console.error('加载数据失败:', err);
   }
 }
+
+function setMax() {
+  const max = document.getElementById('maxAmount').textContent;
+  if (max > 0) document.getElementById('amount').value = max;
+}
+
+async function burn() {
+  if (!account) return connect();
+  
+  const amt = document.getElementById('amount').value;
+  if (!amt || amt <= 0) return alert('请输入燃烧数量');
+  
+  const btn = document.getElementById('burnBtn');
+  btn.innerHTML = '<span class="loading"></span> 处理中...';
+  btn.disabled = true;
+  
+  try {
+    const val = web3.utils.toWei(amt, 'ether');
+    await contract.methods.burn(val).send({from: account})
+      .on('transactionHash', h => alert('已提交: ' + h.slice(0, 10) + '...'))
+      .on('receipt', () => {
+        alert('✅ 燃烧成功！');
+        document.getElementById('amount').value = '';
+        loadData();
+      });
+  } catch (err) {
+    alert('失败: ' + (err.message || '用户取消'));
+  } finally {
+    btn.innerHTML = '🔥 立即燃烧';
+    btn.disabled = false;
+  }
+}
+
+async function claim() {
+  if (!account) return connect();
+  
+  const btn = document.getElementById('claimBtn');
+  btn.innerHTML = '<span class="loading"></span> 领取中...';
+  btn.disabled = true;
+  
+  try {
+    await contract.methods.claim().send({from: account})
+      .on('transactionHash', h => alert('已提交: ' + h.slice(0, 10) + '...'))
+      .on('receipt', () => {
+        alert('✅ 分红领取成功！');
+        loadData();
+      });
+  } catch (err) {
+    alert('失败: ' + (err.message || '用户取消'));
+  } finally {
+    btn.innerHTML = '💰 领取分红';
+    btn.disabled = false;
+  }
+}
+
+// 自动连接
+if (localStorage.getItem('walletConnected') === 'true') {
+  connect();
+}
+
+// 每 10 秒刷新数据
+setInterval(loadData, 10000);
 </script>
 </body>
 </html>
