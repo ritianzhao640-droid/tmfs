@@ -46,7 +46,7 @@
         /* 主内容区 */
         .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
         
-        /* 第一行：余额 + AI池（双卡片布局） */
+        /* 第一行：余额 + 燃烧积分（双卡片布局） */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
         .stat-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
         .stat-label { font-size: 12px; color: #999; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -225,7 +225,7 @@
             </div>
 
             <div class="container">
-                <!-- 第一行：余额 + AI池 -->
+                <!-- 第一行：余额 + 燃烧积分（双卡片布局） -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">我的余额</div>
@@ -233,9 +233,9 @@
                         <div class="stat-sub" id="tokenSymbolDisplay">TMFS</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">AI奖池</div>
-                        <div class="stat-value" id="aiPoolAmount">0.00</div>
-                        <div class="stat-sub">实时累积</div>
+                        <div class="stat-label">燃烧积分</div>
+                        <div class="stat-value" id="burnPoints">0.00</div>
+                        <div class="stat-sub">分红权重</div>
                     </div>
                 </div>
 
@@ -569,15 +569,16 @@
                 const balance = await tokenContract.balanceOf(userAddress);
                 document.getElementById('balance').textContent = formatAmount(ethers.formatUnits(balance, tokenDecimals));
                 
-                const totalSupply = await tokenContract.totalSupply();
-                document.getElementById('aiPoolAmount').textContent = formatAmount(ethers.formatUnits(totalSupply, tokenDecimals) * 0.01);
-                
-                await checkAllowance();
-                
-                if (HAS_DIVIDEND_CONTRACT) {
+                // 如果有分红合约，加载燃烧积分
+                if (HAS_DIVIDEND_CONTRACT && dividendContract) {
                     await loadDividendData();
+                } else {
+                    // 如果没有分红合约，显示代币总量作为占位
+                    const totalSupply = await tokenContract.totalSupply();
+                    document.getElementById('burnPoints').textContent = formatAmount(ethers.formatUnits(totalSupply, tokenDecimals) * 0.01);
                 }
                 
+                await checkAllowance();
                 await fetchTokenPrice();
                 
             } catch (error) {
@@ -663,6 +664,10 @@
                 const pendingWBNB = ethers.formatEther(pending);
                 const pointsFormatted = ethers.formatUnits(points, tokenDecimals);
                 
+                // 更新首页燃烧积分显示
+                document.getElementById('burnPoints').textContent = formatAmount(pointsFormatted);
+                
+                // 更新领取页面数据
                 document.getElementById('pendingWBNB').textContent = formatAmount(pendingWBNB, 4);
                 document.getElementById('totalClaimedWBNB').textContent = formatAmount(ethers.formatEther(claimed), 4);
                 document.getElementById('dividendPoints').textContent = formatAmount(pointsFormatted);
