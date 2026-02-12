@@ -46,12 +46,13 @@
         /* 主内容区 */
         .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
         
-        /* 第一行：余额 + 燃烧积分（双卡片布局） */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-        .stat-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); }
-        .stat-label { font-size: 12px; color: #999; margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-value { font-size: 22px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; }
-        .stat-sub { font-size: 11px; color: #00a854; margin-top: 4px; font-weight: 600; }
+        /* 第一行：余额 + 燃烧积分 + AI池（三卡片布局） */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 16px 0; }
+        .stat-card { background: white; border-radius: 16px; padding: 16px 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); text-align: center; }
+        .stat-label { font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+        .stat-value { font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .stat-sub { font-size: 10px; color: #00a854; margin-top: 2px; font-weight: 600; }
+        .stat-sub.ai { color: #8b5cf6; }
         
         /* 第二行：今日币价（全宽长条） */
         .price-section-full { margin: 0 0 16px; }
@@ -225,7 +226,7 @@
             </div>
 
             <div class="container">
-                <!-- 第一行：余额 + 燃烧积分（双卡片布局） -->
+                <!-- 第一行：余额 + 燃烧积分 + AI池（三卡片并行布局） -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">我的余额</div>
@@ -236,6 +237,11 @@
                         <div class="stat-label">燃烧积分</div>
                         <div class="stat-value" id="burnPoints">0.00</div>
                         <div class="stat-sub">分红权重</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">AI奖池</div>
+                        <div class="stat-value" id="aiPoolAmount">0.00</div>
+                        <div class="stat-sub ai">游戏奖励</div>
                     </div>
                 </div>
 
@@ -257,7 +263,7 @@
                     </div>
                 </div>
 
-                <!-- 第三行：斗地主游戏入口 - 改为链接跳转 -->
+                <!-- 第三行：斗地主游戏入口 -->
                 <div class="game-section-full">
                     <a href="game.html" class="game-module-full" onclick="return checkWalletBeforeGame()">
                         <div class="game-status-full">🔥 热门对战</div>
@@ -424,31 +430,42 @@
     </div>
 
     <script>
-        // ==================== 配置检查 ====================
+        // ==================== 配置检查与加载 ====================
         if (!window.CONTRACT_CONFIG) {
-            alert('错误：未找到 abi.js 文件！');
+            alert('错误：未找到 abi.js 文件或配置不正确！\n请确保 abi.js 正确引入并导出 CONTRACT_CONFIG');
             throw new Error('CONTRACT_CONFIG not found');
         }
 
         const CONFIG = window.CONTRACT_CONFIG;
-        const TOKEN_ABI = CONFIG.tokenABI;
-        const DIVIDEND_ABI = CONFIG.dividendABI || [];
+        
+        // 合约配置
         const TOKEN_ADDRESS = CONFIG.tokenAddress;
         const DIVIDEND_ADDRESS = CONFIG.dividendAddress;
+        const GAME_ADDRESS = CONFIG.gameAddress; // 游戏合约地址（预留）
+        
+        const TOKEN_ABI = CONFIG.tokenABI || [];
+        const DIVIDEND_ABI = CONFIG.dividendABI || [];
+        const GAME_ABI = CONFIG.gameABI || []; // 游戏合约ABI（预留）
+        
+        // 网络配置
         const CHAIN_ID = CONFIG.chainId || "0x38";
         const CHAIN_NAME = CONFIG.chainName || "BSC Mainnet";
         const RPC_URL = CONFIG.rpcUrl || "https://bsc-dataseed.binance.org/";
+        const TOKEN_DECIMALS = CONFIG.decimals || 18;
+        const TOKEN_SYMBOL = CONFIG.symbol || "TMFS";
         
+        // 合约存在性检查
+        const HAS_TOKEN_CONTRACT = TOKEN_ADDRESS && TOKEN_ABI.length > 0;
         const HAS_DIVIDEND_CONTRACT = DIVIDEND_ADDRESS && DIVIDEND_ABI.length > 0;
+        const HAS_GAME_CONTRACT = GAME_ADDRESS && GAME_ABI.length > 0;
 
         // ==================== 全局变量 ====================
         let provider = null;
         let signer = null;
         let tokenContract = null;
         let dividendContract = null;
+        let gameContract = null; // 游戏合约实例（预留）
         let userAddress = null;
-        let tokenDecimals = CONFIG.decimals || 18;
-        let tokenSymbol = "TMFS";
         let longPressTimer = null;
         let longPressInterval = null;
         const LONG_PRESS_DELAY = 500;
@@ -477,13 +494,17 @@
                 showToast('请先连接钱包', true);
                 return false;
             }
-            // 可以在这里添加其他检查，比如余额是否足够
+            if (!HAS_GAME_CONTRACT) {
+                showToast('游戏合约尚未部署', true);
+                return false;
+            }
             return true;
         }
 
         // ==================== 价格查询 ====================
         async function fetchTokenPrice() {
             try {
+                // 这里可以接入实际的价格API
                 const mockPrice = 0.0042;
                 const mockChange = 5.24;
                 
@@ -494,6 +515,29 @@
                 
             } catch (error) {
                 console.error('获取价格失败:', error);
+            }
+        }
+
+        // ==================== AI奖池数据加载 ====================
+        async function loadAIPoolData() {
+            try {
+                let aiPoolBalance = '0.00';
+                
+                if (HAS_GAME_CONTRACT && gameContract) {
+                    // 如果游戏合约已部署，从合约读取AI奖池余额
+                    const poolBalance = await gameContract.getAIPoolBalance().catch(() => 0);
+                    aiPoolBalance = ethers.formatUnits(poolBalance, TOKEN_DECIMALS);
+                } else if (HAS_TOKEN_CONTRACT && tokenContract) {
+                    // 临时方案：显示代币总供应量的1%作为AI奖池预估
+                    const totalSupply = await tokenContract.totalSupply();
+                    aiPoolBalance = ethers.formatUnits(totalSupply, TOKEN_DECIMALS) * 0.01;
+                }
+                
+                document.getElementById('aiPoolAmount').textContent = formatAmount(aiPoolBalance);
+                
+            } catch (error) {
+                console.error('加载AI奖池数据失败:', error);
+                document.getElementById('aiPoolAmount').textContent = '0.00';
             }
         }
 
@@ -523,36 +567,63 @@
 
         // ==================== 钱包连接 ====================
         async function connectWallet() {
-            if (!window.ethereum) { alert('请安装 MetaMask！'); return; }
+            if (!window.ethereum) { 
+                alert('请安装 MetaMask！'); 
+                return; 
+            }
             
             const btn = document.getElementById('walletBtn');
             btn.innerHTML = '<span class="loading"></span>';
             
             try {
+                // 检查并切换网络
                 const chainId = await window.ethereum.request({ method: 'eth_chainId' });
                 if (chainId !== CHAIN_ID) {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: CHAIN_ID }]
-                    });
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: CHAIN_ID }]
+                        });
+                    } catch (switchError) {
+                        // 如果网络不存在，尝试添加
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: CHAIN_ID,
+                                    chainName: CHAIN_NAME,
+                                    rpcUrls: [RPC_URL]
+                                }]
+                            });
+                        }
+                    }
                 }
                 
+                // 连接钱包
                 provider = new ethers.BrowserProvider(window.ethereum);
                 await provider.send("eth_requestAccounts", []);
                 signer = await provider.getSigner();
                 userAddress = await signer.getAddress();
                 
-                tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+                // 初始化合约
+                if (HAS_TOKEN_CONTRACT) {
+                    tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+                }
                 if (HAS_DIVIDEND_CONTRACT) {
                     dividendContract = new ethers.Contract(DIVIDEND_ADDRESS, DIVIDEND_ABI, signer);
                 }
+                if (HAS_GAME_CONTRACT) {
+                    gameContract = new ethers.Contract(GAME_ADDRESS, GAME_ABI, signer);
+                }
                 
+                // 更新UI
                 btn.classList.add('connected');
                 btn.innerHTML = '✓';
                 document.getElementById('authSection').style.display = 'block';
+                document.getElementById('tokenSymbolDisplay').textContent = TOKEN_SYMBOL;
                 
                 await loadAllData();
-                showToast(`已连接: ${tokenSymbol}`);
+                showToast(`已连接: ${TOKEN_SYMBOL}`);
                 
             } catch (error) {
                 console.error('连接失败:', error);
@@ -563,22 +634,25 @@
 
         // ==================== 数据加载 ====================
         async function loadAllData() {
-            if (!tokenContract || !userAddress) return;
+            if (!userAddress) return;
             
             try {
-                const balance = await tokenContract.balanceOf(userAddress);
-                document.getElementById('balance').textContent = formatAmount(ethers.formatUnits(balance, tokenDecimals));
-                
-                // 如果有分红合约，加载燃烧积分
-                if (HAS_DIVIDEND_CONTRACT && dividendContract) {
-                    await loadDividendData();
-                } else {
-                    // 如果没有分红合约，显示代币总量作为占位
-                    const totalSupply = await tokenContract.totalSupply();
-                    document.getElementById('burnPoints').textContent = formatAmount(ethers.formatUnits(totalSupply, tokenDecimals) * 0.01);
+                // 加载代币余额
+                if (HAS_TOKEN_CONTRACT && tokenContract) {
+                    const balance = await tokenContract.balanceOf(userAddress);
+                    document.getElementById('balance').textContent = formatAmount(
+                        ethers.formatUnits(balance, TOKEN_DECIMALS)
+                    );
                 }
                 
+                // 加载燃烧积分和AI奖池
+                await loadDividendData();
+                await loadAIPoolData();
+                
+                // 检查授权状态
                 await checkAllowance();
+                
+                // 加载价格
                 await fetchTokenPrice();
                 
             } catch (error) {
@@ -587,20 +661,36 @@
         }
 
         async function checkAllowance() {
-            if (!tokenContract || !userAddress) return;
+            if (!HAS_TOKEN_CONTRACT || !tokenContract || !userAddress) return;
+            
             try {
                 const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
                 const allowance = await tokenContract.allowance(userAddress, spender);
                 const btn = document.getElementById('authBtn');
-                if (allowance > 0) { btn.textContent = '已授权'; btn.classList.add('authorized'); }
-            } catch (error) { console.error('检查授权失败:', error); }
+                
+                if (allowance > 0) { 
+                    btn.textContent = '已授权'; 
+                    btn.classList.add('authorized'); 
+                } else {
+                    btn.textContent = '授权';
+                    btn.classList.remove('authorized');
+                }
+            } catch (error) { 
+                console.error('检查授权失败:', error); 
+            }
         }
 
         async function authorizeToken() {
-            if (!tokenContract || !userAddress) { alert('请先连接钱包'); return; }
+            if (!HAS_TOKEN_CONTRACT || !tokenContract || !userAddress) { 
+                showToast('请先连接钱包', true); 
+                return; 
+            }
+            
             const btn = document.getElementById('authBtn');
+            const originalText = btn.textContent;
             btn.innerHTML = '<span class="loading"></span>';
             btn.disabled = true;
+            
             try {
                 const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
                 const tx = await tokenContract.approve(spender, ethers.MaxUint256);
@@ -610,25 +700,37 @@
                 await checkAllowance();
             } catch (error) {
                 showToast('授权失败: ' + error.message, true);
-            } finally { btn.disabled = false; }
+                btn.textContent = originalText;
+            } finally { 
+                btn.disabled = false; 
+            }
         }
 
         // ==================== 燃烧功能 ====================
         async function burnTokens() {
-            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) { showToast('未配置分红合约', true); return; }
+            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) { 
+                showToast('未配置分红合约', true); 
+                return; 
+            }
+            
             const amount = document.getElementById('burnAmountInput').value;
-            if (!amount || amount <= 0) { showToast('请输入有效数量', true); return; }
+            if (!amount || amount <= 0) { 
+                showToast('请输入有效数量', true); 
+                return; 
+            }
             
             const btn = document.getElementById('burnBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span> 处理中...';
             
             try {
-                const amountWei = ethers.parseUnits(amount.toString(), tokenDecimals);
+                const amountWei = ethers.parseUnits(amount.toString(), TOKEN_DECIMALS);
                 
+                // 检查余额
                 const balance = await tokenContract.balanceOf(userAddress);
                 if (balance < amountWei) throw new Error('余额不足');
                 
+                // 检查并授权
                 const allowance = await tokenContract.allowance(userAddress, DIVIDEND_ADDRESS);
                 if (allowance < amountWei) {
                     showToast('正在授权...');
@@ -636,13 +738,15 @@
                     await approveTx.wait();
                 }
                 
+                // 执行燃烧
                 const tx = await dividendContract.burn(amountWei);
                 showToast('销毁交易已发送...');
                 await tx.wait();
                 
+                // 刷新数据
                 await loadAllData();
                 document.getElementById('burnAmountInput').value = '0';
-                showToast(`成功销毁 ${amount} ${tokenSymbol}！`);
+                showToast(`成功销毁 ${amount} ${TOKEN_SYMBOL}！`);
                 
             } catch (error) {
                 showToast('销毁失败: ' + error.message, true);
@@ -654,17 +758,22 @@
 
         // ==================== 分红功能 ====================
         async function loadDividendData() {
-            if (!HAS_DIVIDEND_CONTRACT || !dividendContract || !userAddress) return;
+            if (!HAS_DIVIDEND_CONTRACT || !dividendContract || !userAddress) {
+                // 如果没有分红合约，显示占位数据
+                document.getElementById('burnPoints').textContent = '0.00';
+                return;
+            }
+            
             try {
-                const pending = await dividendContract.check(userAddress).catch(() => 0);
+                const pending = await dividendContract.pendingRewards(userAddress).catch(() => 0);
                 const points = await dividendContract.points(userAddress).catch(() => 0);
                 const claimed = await dividendContract.claimed(userAddress).catch(() => 0);
                 const totalBurned = await dividendContract.totalBurned().catch(() => 0);
                 
                 const pendingWBNB = ethers.formatEther(pending);
-                const pointsFormatted = ethers.formatUnits(points, tokenDecimals);
+                const pointsFormatted = ethers.formatUnits(points, TOKEN_DECIMALS);
                 
-                // 更新首页燃烧积分显示
+                // 更新首页燃烧积分
                 document.getElementById('burnPoints').textContent = formatAmount(pointsFormatted);
                 
                 // 更新领取页面数据
@@ -672,20 +781,32 @@
                 document.getElementById('totalClaimedWBNB').textContent = formatAmount(ethers.formatEther(claimed), 4);
                 document.getElementById('dividendPoints').textContent = formatAmount(pointsFormatted);
                 document.getElementById('myBurnAmount').textContent = formatAmount(pointsFormatted);
-                document.getElementById('globalBurnAmount').textContent = formatAmount(ethers.formatUnits(totalBurned, tokenDecimals));
+                document.getElementById('globalBurnAmount').textContent = formatAmount(
+                    ethers.formatUnits(totalBurned, TOKEN_DECIMALS)
+                );
                 document.getElementById('myTotalBurned').textContent = formatAmount(pointsFormatted);
-                document.getElementById('globalBurned').textContent = formatAmount(ethers.formatUnits(totalBurned, tokenDecimals));
+                document.getElementById('globalBurned').textContent = formatAmount(
+                    ethers.formatUnits(totalBurned, TOKEN_DECIMALS)
+                );
                 
+                // 更新领取按钮状态
                 document.getElementById('claimBtn').disabled = pending <= 0;
                 
-            } catch (error) { console.error('加载分红数据失败:', error); }
+            } catch (error) { 
+                console.error('加载分红数据失败:', error); 
+            }
         }
 
         async function claimDividend() {
-            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) { showToast('未配置分红合约', true); return; }
+            if (!HAS_DIVIDEND_CONTRACT || !dividendContract) { 
+                showToast('未配置分红合约', true); 
+                return; 
+            }
+            
             const btn = document.getElementById('claimBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span>';
+            
             try {
                 const tx = await dividendContract.claim();
                 showToast('领取交易已发送...');
@@ -704,6 +825,10 @@
         async function loadRankData() {
             try {
                 // TODO: 从合约获取排行数据
+                // 如果有分红合约，可以读取燃烧排行榜
+                if (HAS_DIVIDEND_CONTRACT && dividendContract) {
+                    // 示例：const topBurners = await dividendContract.getTopBurners(10);
+                }
             } catch (error) {
                 console.error('加载排行失败:', error);
             }
@@ -712,6 +837,7 @@
         function switchRankTab(tab) {
             document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
+            // TODO: 切换排行数据
         }
 
         // ==================== 页面切换 ====================
@@ -720,7 +846,13 @@
                 document.getElementById(id).style.display = 'none';
             });
             
-            const pageMap = { 'home': 'homePage', 'burn': 'burnPage', 'claim': 'claimPage', 'rank': 'rankPage' };
+            const pageMap = { 
+                'home': 'homePage', 
+                'burn': 'burnPage', 
+                'claim': 'claimPage', 
+                'rank': 'rankPage' 
+            };
+            
             if (pageMap[page]) {
                 document.getElementById(pageMap[page]).style.display = 'block';
             }
@@ -728,8 +860,11 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
             
+            // 页面特定数据加载
             if (page === 'claim' || page === 'burn') {
-                if (tokenContract) { loadAllData(); loadDividendData(); }
+                if (userAddress) { 
+                    loadAllData(); 
+                }
             } else if (page === 'rank') {
                 loadRankData();
             }
@@ -743,6 +878,13 @@
 
         window.addEventListener('load', () => {
             console.log('✅ DApp 已加载');
+            console.log('合约配置:', {
+                token: HAS_TOKEN_CONTRACT ? '已配置' : '未配置',
+                dividend: HAS_DIVIDEND_CONTRACT ? '已配置' : '未配置',
+                game: HAS_GAME_CONTRACT ? '已配置' : '未配置'
+            });
+            
+            // 定期刷新价格
             setInterval(fetchTokenPrice, 30000);
         });
     </script>
