@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ffffff">
-    <title>踏马封神斗地主</title>
-    
+    <title>踏马封神斗地主</title> 
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
     <script src="abi.js"></script>
     
@@ -852,14 +851,15 @@
             }
         }
 
-        // ==================== 分红奖池 ====================
+        // ==================== 分红奖池 - 修复：使用 WBNB 的 balanceOf 而不是 getBalance ====================
         async function loadDividendPoolData() {
             try {
                 let poolWBNB = '0.0000';
                 
-                if (provider && DIVIDEND_ADDRESS) {
-                    const bnbBalance = await provider.getBalance(DIVIDEND_ADDRESS);
-                    poolWBNB = ethers.formatEther(bnbBalance);
+                // 修复：使用 wbnbContract.balanceOf 查询 WBNB 余额，而不是 provider.getBalance (BNB)
+                if (wbnbContract && DIVIDEND_ADDRESS) {
+                    const balance = await wbnbContract.balanceOf(DIVIDEND_ADDRESS);
+                    poolWBNB = ethers.formatEther(balance);
                 }
                 
                 document.getElementById('dividendPoolAmount').textContent = formatAmount(poolWBNB, 4);
