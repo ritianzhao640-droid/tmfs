@@ -441,11 +441,11 @@
         // 合约配置
         const TOKEN_ADDRESS = CONFIG.tokenAddress;
         const DIVIDEND_ADDRESS = CONFIG.dividendAddress;
-        const GAME_ADDRESS = CONFIG.gameAddress; // 游戏合约地址（预留）
+        const GAME_ADDRESS = CONFIG.gameAddress;
         
         const TOKEN_ABI = CONFIG.tokenABI || [];
         const DIVIDEND_ABI = CONFIG.dividendABI || [];
-        const GAME_ABI = CONFIG.gameABI || []; // 游戏合约ABI（预留）
+        const GAME_ABI = CONFIG.gameABI || [];
         
         // 网络配置
         const CHAIN_ID = CONFIG.chainId || "0x38";
@@ -464,7 +464,7 @@
         let signer = null;
         let tokenContract = null;
         let dividendContract = null;
-        let gameContract = null; // 游戏合约实例（预留）
+        let gameContract = null;
         let userAddress = null;
         let longPressTimer = null;
         let longPressInterval = null;
@@ -504,7 +504,6 @@
         // ==================== 价格查询 ====================
         async function fetchTokenPrice() {
             try {
-                // 这里可以接入实际的价格API
                 const mockPrice = 0.0042;
                 const mockChange = 5.24;
                 
@@ -585,7 +584,6 @@
                             params: [{ chainId: CHAIN_ID }]
                         });
                     } catch (switchError) {
-                        // 如果网络不存在，尝试添加
                         if (switchError.code === 4902) {
                             await window.ethereum.request({
                                 method: 'wallet_addEthereumChain',
@@ -738,8 +736,8 @@
                     await approveTx.wait();
                 }
                 
-                // 执行燃烧
-                const tx = await dividendContract.burn(amountWei);
+                // 执行燃烧 - 使用 recordBurn 函数名
+                const tx = await dividendContract.recordBurn(amountWei);
                 showToast('销毁交易已发送...');
                 await tx.wait();
                 
@@ -759,38 +757,39 @@
         // ==================== 分红功能 ====================
         async function loadDividendData() {
             if (!HAS_DIVIDEND_CONTRACT || !dividendContract || !userAddress) {
-                // 如果没有分红合约，显示占位数据
                 document.getElementById('burnPoints').textContent = '0.00';
                 return;
             }
             
             try {
-                const pending = await dividendContract.pendingRewards(userAddress).catch(() => 0);
-                const points = await dividendContract.points(userAddress).catch(() => 0);
-                const claimed = await dividendContract.claimed(userAddress).catch(() => 0);
+                // 使用正确的函数名查询数据
+                const claimableAmount = await dividendContract.claimable(userAddress).catch(() => 0);
+                const userBurned = await dividendContract.userBurned(userAddress).catch(() => 0);
+                const userClaimed = await dividendContract.userClaimed(userAddress).catch(() => 0);
                 const totalBurned = await dividendContract.totalBurned().catch(() => 0);
+                const totalClaimed = await dividendContract.totalClaimed().catch(() => 0);
                 
-                const pendingWBNB = ethers.formatEther(pending);
-                const pointsFormatted = ethers.formatUnits(points, TOKEN_DECIMALS);
+                const claimableWBNB = ethers.formatEther(claimableAmount);
+                const userBurnedFormatted = ethers.formatUnits(userBurned, TOKEN_DECIMALS);
                 
                 // 更新首页燃烧积分
-                document.getElementById('burnPoints').textContent = formatAmount(pointsFormatted);
+                document.getElementById('burnPoints').textContent = formatAmount(userBurnedFormatted);
                 
                 // 更新领取页面数据
-                document.getElementById('pendingWBNB').textContent = formatAmount(pendingWBNB, 4);
-                document.getElementById('totalClaimedWBNB').textContent = formatAmount(ethers.formatEther(claimed), 4);
-                document.getElementById('dividendPoints').textContent = formatAmount(pointsFormatted);
-                document.getElementById('myBurnAmount').textContent = formatAmount(pointsFormatted);
+                document.getElementById('pendingWBNB').textContent = formatAmount(claimableWBNB, 4);
+                document.getElementById('totalClaimedWBNB').textContent = formatAmount(ethers.formatEther(userClaimed), 4);
+                document.getElementById('dividendPoints').textContent = formatAmount(userBurnedFormatted);
+                document.getElementById('myBurnAmount').textContent = formatAmount(userBurnedFormatted);
                 document.getElementById('globalBurnAmount').textContent = formatAmount(
                     ethers.formatUnits(totalBurned, TOKEN_DECIMALS)
                 );
-                document.getElementById('myTotalBurned').textContent = formatAmount(pointsFormatted);
+                document.getElementById('myTotalBurned').textContent = formatAmount(userBurnedFormatted);
                 document.getElementById('globalBurned').textContent = formatAmount(
                     ethers.formatUnits(totalBurned, TOKEN_DECIMALS)
                 );
                 
                 // 更新领取按钮状态
-                document.getElementById('claimBtn').disabled = pending <= 0;
+                document.getElementById('claimBtn').disabled = claimableAmount <= 0;
                 
             } catch (error) { 
                 console.error('加载分红数据失败:', error); 
@@ -825,10 +824,6 @@
         async function loadRankData() {
             try {
                 // TODO: 从合约获取排行数据
-                // 如果有分红合约，可以读取燃烧排行榜
-                if (HAS_DIVIDEND_CONTRACT && dividendContract) {
-                    // 示例：const topBurners = await dividendContract.getTopBurners(10);
-                }
             } catch (error) {
                 console.error('加载排行失败:', error);
             }
@@ -837,7 +832,6 @@
         function switchRankTab(tab) {
             document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            // TODO: 切换排行数据
         }
 
         // ==================== 页面切换 ====================
@@ -860,7 +854,6 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
             
-            // 页面特定数据加载
             if (page === 'claim' || page === 'burn') {
                 if (userAddress) { 
                     loadAllData(); 
@@ -884,7 +877,6 @@
                 game: HAS_GAME_CONTRACT ? '已配置' : '未配置'
             });
             
-            // 定期刷新价格
             setInterval(fetchTokenPrice, 30000);
         });
     </script>
