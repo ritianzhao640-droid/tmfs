@@ -5,7 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ffffff">
     <title>踏马封神斗地主</title>
+    <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>踏马封神斗地主</title>
     
+    <!-- 诊断脚本 - 放在最前面 -->
+    <script>
+        console.log('=== 诊断开始 ===');
+        console.log('当前页面URL:', window.location.href);
+        console.log('当前路径:', window.location.pathname);
+        
+        // 检查 abi.js 是否已加载
+        setTimeout(() => {
+            console.log('window.CONTRACT_CONFIG:', window.CONTRACT_CONFIG);
+            if (window.CONTRACT_CONFIG) {
+                console.log('✅ abi.js 已加载');
+                console.log('tokenAddress:', window.CONTRACT_CONFIG.tokenAddress);
+            } else {
+                console.error('❌ abi.js 未加载或配置不存在');
+            }
+        }, 100);
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+    <script src="abi.js"></script>  <!-- 确保文件名完全匹配 -->
+    
+    <style>
+        /* ... 你的样式 ... */
+    </style>
+</head>
+<body>
+    <!-- ... 你的内容 ... -->
+</body>
+</html>
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
     <script src="abi.js"></script>
     
@@ -882,3 +916,4 @@
     </script>
 </body>
 </html>
+
