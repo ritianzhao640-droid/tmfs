@@ -31,7 +31,6 @@
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 顶部导航 */
         .top-nav { 
             display: flex; 
             justify-content: space-between; 
@@ -46,7 +45,6 @@
         }
         .brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        /* 钱包区域 */
         .wallet-area { 
             display: flex; 
             flex-direction: column; 
@@ -81,7 +79,6 @@
             white-space: nowrap;
         }
         
-        /* 提示框 */
         .wallet-hint {
             position: absolute;
             top: 60px;
@@ -111,7 +108,6 @@
         
         .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
         
-        /* 刷新按钮 */
         .refresh-section {
             display: flex;
             justify-content: flex-end;
@@ -144,7 +140,6 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* 三卡片布局 */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
         .stat-card { background: white; border-radius: 16px; padding: 16px 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); text-align: center; }
         .stat-label { font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -152,7 +147,6 @@
         .stat-sub { font-size: 10px; color: #00a854; margin-top: 2px; font-weight: 600; }
         .stat-sub.ai { color: #8b5cf6; }
         
-        /* 今日币价 + 分红奖池 */
         .price-pool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 16px; }
         
         .price-module-full { 
@@ -164,14 +158,17 @@
             display: flex; 
             flex-direction: column;
             justify-content: center;
+            position: relative;
         }
         .price-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .price-title-text { font-size: 11px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         .price-change-full { font-size: 11px; font-weight: 700; color: #00a854; background: rgba(0,168,84,0.1); padding: 3px 6px; border-radius: 10px; }
         .price-change-full.down { color: #dc2626; background: rgba(220,38,38,0.1); }
-        .price-value-full { font-size: 22px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
+        .price-value-full { font-size: 20px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
         .price-loading { font-size: 12px; color: #999; }
         .price-update-time { font-size: 9px; color: #999; margin-top: 4px; }
+        .price-error { font-size: 11px; color: #dc2626; margin-top: 4px; }
+        .price-source { font-size: 8px; color: #999; position: absolute; bottom: 4px; right: 8px; }
         
         .dividend-pool-module { 
             background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); 
@@ -205,7 +202,6 @@
             font-weight: 600; 
         }
         
-        /* 游戏入口 */
         .game-section-full { margin-bottom: 20px; }
         .game-module-full { 
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); 
@@ -244,7 +240,6 @@
             pointer-events: none;
         }
         
-        /* 燃烧页面 */
         .input-card { background: white; border-radius: 24px; padding: 28px 20px; margin: 0 0 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
         .input-label { font-size: 13px; color: #999; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
         .big-input { width: 100%; border: none; font-size: 42px; font-weight: 700; text-align: center; color: #1a1a1a; outline: none; margin-bottom: 16px; font-family: inherit; }
@@ -266,7 +261,6 @@
         .info-label { font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 500; }
         .info-value { font-size: 16px; font-weight: 700; color: #1a1a1a; }
         
-        /* 领取分红页面 */
         .claim-container { padding: 16px; }
         .claim-header { background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 24px; text-align: center; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(245,158,11,0.1); }
         .claim-label { font-size: 12px; color: #92400e; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
@@ -283,7 +277,6 @@
         .claim-rule { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 12px; color: #666; line-height: 1.6; text-align: center; }
         .claim-rule-title { font-weight: 700; color: #1a1a1a; margin-bottom: 6px; font-size: 13px; }
         
-        /* 排行页面 */
         .rank-header { padding: 60px 20px 20px; text-align: center; background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%); }
         .rank-title { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
         .rank-subtitle { font-size: 14px; color: #666; }
@@ -311,7 +304,6 @@
         .my-rank-label { font-size: 12px; opacity: 0.8; margin-bottom: 2px; }
         .my-rank-value { font-size: 16px; font-weight: 700; }
         
-        /* 底部导航 */
         .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); border-radius: 30px; padding: 10px 14px; display: flex; gap: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid rgba(0,0,0,0.05); z-index: 1000; max-width: 95%; }
         @media (min-width: 768px) { .bottom-nav { position: absolute; } }
         
@@ -319,7 +311,6 @@
         .nav-item.active { background: #1a1a1a; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .nav-icon { font-size: 18px; line-height: 1; }
         
-        /* 提示 */
         .tx-toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: rgba(26,26,26,0.95); color: white; padding: 14px 24px; border-radius: 14px; font-size: 14px; font-weight: 500; z-index: 10000; display: none; backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-width: 90%; text-align: center; }
         .tx-toast.show { display: block; }
         .tx-toast.error { background: rgba(220,38,38,0.95); }
@@ -352,7 +343,6 @@
                 </div>
             </div>
             
-            <!-- 提示框 -->
             <div class="wallet-hint" id="walletHint">
                 一切的开始都要从连接钱包、授权钱包开始
             </div>
@@ -362,7 +352,6 @@
             </div>
 
             <div class="container">
-                <!-- 刷新按钮 -->
                 <div class="refresh-section">
                     <button class="refresh-btn" id="refreshBtn" onclick="refreshData()">
                         <span class="refresh-icon">🔄</span>
@@ -370,7 +359,6 @@
                     </button>
                 </div>
 
-                <!-- 第一行：余额 + 燃烧积分 + AI池 -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">我的余额</div>
@@ -389,9 +377,7 @@
                     </div>
                 </div>
 
-                <!-- 第二行：今日币价 + 分红奖池 -->
                 <div class="price-pool-grid">
-                    <!-- 今日币价 -->
                     <div class="price-module-full">
                         <div class="price-header-row">
                             <div class="price-title-text">今日币价</div>
@@ -401,9 +387,10 @@
                             <span class="price-loading">加载中...</span>
                         </div>
                         <div class="price-update-time" id="priceUpdateTime"></div>
+                        <div class="price-error" id="priceError"></div>
+                        <div class="price-source" id="priceSource"></div>
                     </div>
                     
-                    <!-- 分红奖池 -->
                     <div class="dividend-pool-module">
                         <div class="dividend-pool-label">💰 分红奖池</div>
                         <div class="dividend-pool-value" id="dividendPoolAmount">0.0000</div>
@@ -411,7 +398,6 @@
                     </div>
                 </div>
 
-                <!-- 第三行：游戏入口 -->
                 <div class="game-section-full">
                     <a href="game.html" class="game-module-full" onclick="return checkWalletBeforeGame()">
                         <div class="game-status-full">🔥 热门对战</div>
@@ -576,10 +562,7 @@
         const HAS_DIVIDEND_CONTRACT = DIVIDEND_ADDRESS && DIVIDEND_ABI.length > 0;
         const HAS_GAME_CONTRACT = GAME_ADDRESS && GAME_ABI.length > 0;
 
-        // WBNB 合约地址 (BSC主网)
         const WBNB_ADDRESS = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
-        
-        // 授权额度：3000万代币
         const APPROVE_AMOUNT = ethers.parseUnits("30000000", TOKEN_DECIMALS);
 
         // ==================== 全局变量 ====================
@@ -621,10 +604,8 @@
             showToast('正在刷新数据...');
             
             try {
-                // 刷新价格（强制重新请求）
                 await fetchTokenPrice(true);
                 
-                // 如果已连接钱包，刷新链上数据
                 if (userAddress) {
                     await loadAllData();
                 }
@@ -638,26 +619,24 @@
             }
         }
 
-        // ==================== 真实币价获取（增强版） ====================
+        // ==================== 币价获取 - 多源备用 ====================
         async function fetchTokenPrice(forceRefresh = false) {
             const priceEl = document.getElementById('tokenPrice');
             const changeEl = document.getElementById('priceChange');
             const timeEl = document.getElementById('priceUpdateTime');
+            const errorEl = document.getElementById('priceError');
+            const sourceEl = document.getElementById('priceSource');
             
-            // 如果不是强制刷新，且5分钟内已更新，则跳过
-            if (!forceRefresh && lastPriceUpdate && (Date.now() - lastPriceUpdate < 300000)) {
-                console.log('价格数据在5分钟内，跳过刷新');
-            }
+            errorEl.textContent = '';
+            sourceEl.textContent = '';
             
+            // 方法1: 尝试 DexScreener
             try {
-                console.log('正在获取价格，代币地址:', TOKEN_ADDRESS);
-                
-                // 添加时间戳防止缓存
+                console.log('尝试 DexScreener API...');
                 const timestamp = Date.now();
                 const response = await fetch(
                     `https://api.dexscreener.com/latest/dex/tokens/${TOKEN_ADDRESS}?_=${timestamp}`,
                     { 
-                        method: 'GET',
                         headers: { 
                             'Accept': 'application/json',
                             'Cache-Control': 'no-cache'
@@ -665,64 +644,211 @@
                     }
                 );
                 
-                console.log('API 响应状态:', response.status);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('DexScreener 响应:', data);
+                    
+                    if (data.pairs && data.pairs.length > 0) {
+                        // 按交易量排序
+                        const pair = data.pairs.sort((a, b) => 
+                            parseFloat(b.volume?.h24 || 0) - parseFloat(a.volume?.h24 || 0)
+                        )[0];
+                        
+                        const price = parseFloat(pair.priceUsd);
+                        const priceChange24h = parseFloat(pair.priceChange?.h24 || 0);
+                        
+                        if (price > 0) {
+                            priceEl.textContent = '$' + price.toFixed(8);
+                            changeEl.textContent = (priceChange24h >= 0 ? '+' : '') + priceChange24h.toFixed(2) + '%';
+                            changeEl.className = 'price-change-full ' + (priceChange24h < 0 ? 'down' : '');
+                            
+                            lastPriceUpdate = Date.now();
+                            const now = new Date();
+                            timeEl.textContent = `更新于 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                            sourceEl.textContent = 'DexScreener';
+                            
+                            console.log('✅ DexScreener 价格获取成功:', price);
+                            return;
+                        }
+                    }
+                }
+                throw new Error('DexScreener 无数据');
                 
-                if (!response.ok) {
-                    throw new Error(`API 请求失败: ${response.status}`);
+            } catch (dexError) {
+                console.warn('DexScreener 失败:', dexError.message);
+                
+                // 方法2: 尝试 CoinGecko
+                try {
+                    console.log('尝试 CoinGecko API...');
+                    const cgResponse = await fetch(
+                        `https://api.coingecko.com/api/v3/simple/token_price/binance-smart-chain?contract_addresses=${TOKEN_ADDRESS}&vs_currencies=usd&include_24hr_change=true`,
+                        { headers: { 'Accept': 'application/json' } }
+                    );
+                    
+                    if (cgResponse.ok) {
+                        const cgData = await cgResponse.json();
+                        console.log('CoinGecko 响应:', cgData);
+                        
+                        const tokenData = cgData[TOKEN_ADDRESS.toLowerCase()];
+                        if (tokenData && tokenData.usd > 0) {
+                            const price = tokenData.usd;
+                            const change = tokenData.usd_24h_change || 0;
+                            
+                            priceEl.textContent = '$' + price.toFixed(8);
+                            changeEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+                            changeEl.className = 'price-change-full ' + (change < 0 ? 'down' : '');
+                            
+                            lastPriceUpdate = Date.now();
+                            const now = new Date();
+                            timeEl.textContent = `更新于 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                            sourceEl.textContent = 'CoinGecko';
+                            
+                            console.log('✅ CoinGecko 价格获取成功:', price);
+                            return;
+                        }
+                    }
+                    throw new Error('CoinGecko 无数据');
+                    
+                } catch (cgError) {
+                    console.warn('CoinGecko 失败:', cgError.message);
+                    
+                    // 方法3: 尝试从 PancakeSwap 交易对直接计算
+                    try {
+                        console.log('尝试从 PancakeSwap 计算...');
+                        const price = await getPriceFromPancakeSwap();
+                        
+                        if (price > 0) {
+                            priceEl.textContent = '$' + price.toFixed(8);
+                            changeEl.textContent = '--';
+                            changeEl.className = 'price-change-full';
+                            
+                            lastPriceUpdate = Date.now();
+                            const now = new Date();
+                            timeEl.textContent = `更新于 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                            sourceEl.textContent = 'PancakeSwap';
+                            
+                            console.log('✅ PancakeSwap 价格计算成功:', price);
+                            return;
+                        }
+                        throw new Error('无法计算价格');
+                        
+                    } catch (psError) {
+                        console.error('所有价格源失败:', psError);
+                        priceEl.innerHTML = '<span style="font-size: 14px; color: #999;">--</span>';
+                        changeEl.textContent = '--';
+                        errorEl.textContent = '价格暂时无法获取';
+                        timeEl.textContent = '点击刷新重试';
+                    }
+                }
+            }
+        }
+
+        // ==================== 从 PancakeSwap 获取价格 ====================
+        async function getPriceFromPancakeSwap() {
+            // 使用 BSC 公共 RPC
+            const publicProvider = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+            
+            // PancakeSwap V2 Factory
+            const FACTORY_V2 = '0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73';
+            const WBNB = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
+            
+            // Factory ABI
+            const factoryABI = [
+                'function getPair(address tokenA, address tokenB) view returns (address pair)'
+            ];
+            
+            // Pair ABI
+            const pairABI = [
+                'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+                'function token0() view returns (address)',
+                'function token1() view returns (address)'
+            ];
+            
+            try {
+                const factory = new ethers.Contract(FACTORY_V2, factoryABI, publicProvider);
+                const pairAddress = await factory.getPair(TOKEN_ADDRESS, WBNB);
+                
+                if (pairAddress === '0x0000000000000000000000000000000000000000') {
+                    throw new Error('交易对不存在');
                 }
                 
-                const data = await response.json();
-                console.log('API 返回数据:', data);
+                const pair = new ethers.Contract(pairAddress, pairABI, publicProvider);
+                const [reserve0, reserve1] = await pair.getReserves();
+                const token0 = await pair.token0();
                 
-                if (!data.pairs || data.pairs.length === 0) {
-                    throw new Error('未找到交易对');
+                // 获取 WBNB 价格（从 BNB/USDT 或类似交易对）
+                const wbnbPrice = await getWBNBPrice(publicProvider);
+                
+                let tokenReserve, wbnbReserve;
+                
+                if (token0.toLowerCase() === TOKEN_ADDRESS.toLowerCase()) {
+                    tokenReserve = reserve0;
+                    wbnbReserve = reserve1;
+                } else {
+                    tokenReserve = reserve1;
+                    wbnbReserve = reserve0;
                 }
                 
-                // 优先使用 PancakeSwap，其次按交易量排序
-                let pair = data.pairs.find(p => 
-                    p.dexId === 'pancakeswap' || 
-                    p.dexId === 'pancakeswap-v2' || 
-                    p.dexId === 'pancakeswap-v3'
-                );
+                // 计算价格
+                const tokenAmount = parseFloat(ethers.formatUnits(tokenReserve, TOKEN_DECIMALS));
+                const wbnbAmount = parseFloat(ethers.formatEther(wbnbReserve));
                 
-                if (!pair) {
-                    // 按交易量排序，选最大的
-                    pair = data.pairs.sort((a, b) => 
-                        parseFloat(b.volume?.h24 || 0) - parseFloat(a.volume?.h24 || 0)
-                    )[0];
-                }
+                const priceInWBNB = wbnbAmount / tokenAmount;
+                const priceInUSD = priceInWBNB * wbnbPrice;
                 
-                console.log('使用的交易对:', pair);
+                console.log('PancakeSwap 计算:', {
+                    tokenReserve: tokenAmount,
+                    wbnbReserve: wbnbAmount,
+                    priceInWBNB: priceInWBNB,
+                    wbnbPrice: wbnbPrice,
+                    priceInUSD: priceInUSD
+                });
                 
-                const price = parseFloat(pair.priceUsd);
-                const priceChange24h = parseFloat(pair.priceChange?.h24 || 0);
-                const volume24h = parseFloat(pair.volume?.h24 || 0);
-                const liquidity = parseFloat(pair.liquidity?.usd || 0);
-                
-                console.log('价格:', price, '变化:', priceChange24h + '%', '成交量:', volume24h);
-                
-                // 更新显示
-                priceEl.textContent = '$' + price.toFixed(8);
-                
-                const changeText = (priceChange24h >= 0 ? '+' : '') + priceChange24h.toFixed(2) + '%';
-                changeEl.textContent = changeText;
-                changeEl.className = 'price-change-full ' + (priceChange24h < 0 ? 'down' : '');
-                
-                // 更新时间
-                lastPriceUpdate = Date.now();
-                const now = new Date();
-                timeEl.textContent = `更新于 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-                
-                // 如果有成交量，在控制台输出
-                if (volume24h > 0) {
-                    console.log(`✅ 24h成交量: $${volume24h.toLocaleString()}`);
-                }
+                return priceInUSD;
                 
             } catch (error) {
-                console.error('获取价格失败:', error);
-                priceEl.innerHTML = '<span style="font-size: 14px; color: #999;">获取失败</span>';
-                changeEl.textContent = '--';
-                timeEl.textContent = '点击刷新重试';
+                console.error('PancakeSwap 价格计算失败:', error);
+                return 0;
+            }
+        }
+
+        // 获取 WBNB 价格
+        async function getWBNBPrice(provider) {
+            try {
+                // 使用 BNB/USDT 交易对
+                const USDT = '0x55d398326f99059fF775485246999027B3197955';
+                const FACTORY_V2 = '0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73';
+                const factoryABI = ['function getPair(address,address) view returns (address)'];
+                const pairABI = ['function getReserves() view returns (uint112,uint112,uint32)', 'function token0() view returns (address)'];
+                
+                const factory = new ethers.Contract(FACTORY_V2, factoryABI, provider);
+                const pairAddress = await factory.getPair(WBNB_ADDRESS, USDT);
+                
+                if (pairAddress === '0x0000000000000000000000000000000000000000') {
+                    return 600; // 默认价格
+                }
+                
+                const pair = new ethers.Contract(pairAddress, pairABI, provider);
+                const [reserve0, reserve1] = await pair.getReserves();
+                const token0 = await pair.token0();
+                
+                let bnbReserve, usdtReserve;
+                if (token0.toLowerCase() === WBNB_ADDRESS.toLowerCase()) {
+                    bnbReserve = reserve0;
+                    usdtReserve = reserve1;
+                } else {
+                    bnbReserve = reserve1;
+                    usdtReserve = reserve0;
+                }
+                
+                const bnbAmount = parseFloat(ethers.formatEther(bnbReserve));
+                const usdtAmount = parseFloat(ethers.formatUnits(usdtReserve, 18));
+                
+                return usdtAmount / bnbAmount;
+                
+            } catch (error) {
+                console.warn('获取 WBNB 价格失败，使用默认值:', error);
+                return 600; // 默认 BNB 价格
             }
         }
 
@@ -853,18 +979,14 @@
                 ];
                 wbnbContract = new ethers.Contract(WBNB_ADDRESS, wbnbABI, signer);
                 
-                // 更新UI
                 btn.classList.add('connected');
                 btn.innerHTML = '✓';
                 
-                // 显示简缩地址
                 const addressEl = document.getElementById('walletAddress');
                 addressEl.textContent = formatAddress(userAddress);
                 addressEl.style.display = 'block';
                 
-                // 隐藏提示框
                 document.getElementById('walletHint').classList.add('hidden');
-                
                 document.getElementById('authSection').style.display = 'block';
                 document.getElementById('tokenSymbolDisplay').textContent = TOKEN_SYMBOL;
                 
@@ -933,8 +1055,6 @@
             
             try {
                 const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
-                
-                // 授权 3000万，而不是无限
                 const tx = await tokenContract.approve(spender, APPROVE_AMOUNT);
                 showToast('授权交易已发送...');
                 await tx.wait();
@@ -1136,7 +1256,6 @@
         if (window.ethereum) {
             window.ethereum.on('accountsChanged', (accounts) => {
                 if (accounts.length === 0) {
-                    // 用户断开连接
                     location.reload();
                 } else {
                     location.reload();
@@ -1147,9 +1266,7 @@
 
         window.addEventListener('load', () => {
             console.log('✅ DApp 已加载');
-            // 立即获取价格
             fetchTokenPrice();
-            // 每30秒自动刷新
             setInterval(() => fetchTokenPrice(), 30000);
         });
     </script>
