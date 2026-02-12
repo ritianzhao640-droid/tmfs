@@ -1,520 +1,1209 @@
-const TOKEN_ABI =[
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_tokenAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_wbnbAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_fundManager",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "EnforcedPause",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "ExpectedPause",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			}
-		],
-		"name": "OwnableInvalidOwner",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "OwnableUnauthorizedAccount",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "ReentrancyGuardReentrantCall",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			}
-		],
-		"name": "SafeERC20FailedOperation",
-		"type": "error"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "BNBRescued",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "timestamp",
-				"type": "uint256"
-			}
-		],
-		"name": "BurnRecorded",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "wbnbAmount",
-				"type": "uint256"
-			}
-		],
-		"name": "DividendClaimed",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "ERC20Rescued",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "Paused",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "PoolFunded",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "Unpaused",
-		"type": "event"
-	},
-	{
-		"inputs": [],
-		"name": "BURN_ADDRESS",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "claim",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "user",
-				"type": "address"
-			}
-		],
-		"name": "claimable",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "fundManager",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "fundPool",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "pause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "paused",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "recordBurn",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "remainingPool",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "rescueBNB",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "token",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "rescueERC20",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_newFundManager",
-				"type": "address"
-			}
-		],
-		"name": "setFundManager",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "tamaToken",
-		"outputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalBurned",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalClaimed",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalDividend",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "unpause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "userBurned",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "userClaimed",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "wbnb",
-		"outputs": [
-			{
-				"internalType": "contract IERC20",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"stateMutability": "payable",
-		"type": "receive"
-	}
-]
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a472a">
+    <title>斗地主对战 - 踏马封神</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+    <script src="abi.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif; 
+            background: linear-gradient(180deg, #1a472a 0%, #0d3320 100%); 
+            min-height: 100vh; 
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        @media (min-width: 768px) {
+            body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; background: #0d3320; }
+            .game-container { width: 100%; max-width: 480px; min-height: 100vh; position: relative; }
+        }
+        
+        /* 游戏顶部栏 */
+        .game-header {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .game-info-center {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .game-room-id {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        
+        .game-pot-display {
+            font-size: 12px;
+            color: #ffd700;
+            margin-top: 2px;
+        }
+        
+        /* 游戏主区域 */
+        .game-table-area {
+            min-height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 10px;
+        }
+        
+        /* AI玩家区域 */
+        .ai-players-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 30px;
+            height: 90px;
+        }
+        
+        .ai-player-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .ai-avatar-wrap {
+            position: relative;
+            width: 48px;
+            height: 48px;
+        }
+        
+        .ai-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .ai-avatar.active {
+            border-color: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72,187,120,0.3);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .ai-avatar.landlord::after {
+            content: '👑';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 14px;
+            background: #ffd700;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .ai-info {
+            text-align: center;
+        }
+        
+        .ai-name {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .ai-card-count {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .ai-status {
+            font-size: 10px;
+            color: #48bb78;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+        
+        /* 中央牌桌区域 */
+        .table-center-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        /* 地主牌区域 */
+        .landlord-cards-area {
+            position: absolute;
+            top: 0;
+            display: flex;
+            gap: 8px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .landlord-cards-area.show {
+            opacity: 1;
+        }
+        
+        .landlord-card {
+            width: 32px;
+            height: 45px;
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        /* 出牌区域 */
+        .play-area {
+            width: 100%;
+            max-width: 300px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .last-play-info {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .cards-on-table {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 4px;
+            min-height: 60px;
+            padding: 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            width: 100%;
+            min-height: 80px;
+        }
+        
+        .card-played {
+            width: 36px;
+            height: 50px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            animation: playCard 0.3s ease;
+        }
+        
+        @keyframes playCard {
+            from { transform: translateY(-20px) scale(0.8); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        
+        .card-red { color: #e53e3e; }
+        .card-black { color: #1a202c; }
+        
+        /* 游戏状态提示 */
+        .game-status-bar {
+            background: rgba(0,0,0,0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        /* 玩家区域 */
+        .player-section {
+            background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 100%);
+            padding: 15px;
+            padding-bottom: 30px;
+        }
+        
+        /* 手牌区域 */
+        .hand-area {
+            height: 100px;
+            position: relative;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        
+        .hand-card {
+            position: absolute;
+            width: 46px;
+            height: 64px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            user-select: none;
+            bottom: 0;
+        }
+        
+        .hand-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .hand-card.selected {
+            transform: translateY(-20px);
+            border-color: #48bb78;
+            box-shadow: 0 4px 12px rgba(72,187,120,0.4);
+            z-index: 100 !important;
+        }
+        
+        /* 操作按钮区域 */
+        .controls-area {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .game-btn {
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            min-width: 90px;
+        }
+        
+        .game-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(72,187,120,0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        /* 开始游戏弹窗 */
+        .game-start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .game-start-content {
+            background: white;
+            padding: 35px 25px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+            color: #1a1a1a;
+        }
+        
+        .game-start-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .game-start-desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .stake-info {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stake-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        
+        .stake-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .start-game-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .start-game-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .cancel-btn {
+            background: transparent;
+            color: #666;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        /* 游戏结果弹窗 */
+        .game-result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .game-result-modal.show {
+            display: flex;
+        }
+        
+        .result-content {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+            color: #1a1a1a;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .result-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .result-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #48bb78;
+            margin-bottom: 20px;
+        }
+        
+        .result-amount.lose {
+            color: #e53e3e;
+        }
+        
+        /* 提示 */
+        .tx-toast { 
+            position: fixed; 
+            top: 80px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: rgba(26,26,26,0.95); 
+            color: white; 
+            padding: 12px 20px; 
+            border-radius: 12px; 
+            font-size: 14px; 
+            font-weight: 500; 
+            z-index: 10000; 
+            display: none; 
+            backdrop-filter: blur(10px); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); 
+            max-width: 90%; 
+            text-align: center; 
+        }
+        .tx-toast.show { display: block; }
+        .tx-toast.error { background: rgba(220,38,38,0.95); }
+        
+        .loading { 
+            display: inline-block; 
+            width: 16px; 
+            height: 16px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 50%; 
+            border-top-color: white; 
+            animation: spin 1s ease-in-out infinite; 
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div id="txToast" class="tx-toast"></div>
 
-const TOKEN_ADDRESS = "0x9a889e525faef4851bf5bebfb5f294ac9d097777";
+        <!-- 游戏顶部栏 -->
+        <div class="game-header">
+            <a href="index.html" class="back-btn">←</a>
+            <div class="game-info-center">
+                <div class="game-room-id">房间 #<span id="gameRoomId">---</span></div>
+                <div class="game-pot-display">奖池: <span id="gamePotAmount">0</span> TMFS | 倍数: x<span id="gameMultiplier">1</span></div>
+            </div>
+            <div style="width: 36px;"></div>
+        </div>
 
-// 导出供其他文件使用
-if (typeof module !== 'undefined') {
-  module.exports = { TOKEN_ABI, TOKEN_ADDRESS };
-}
+        <!-- 游戏主区域 -->
+        <div class="game-table-area" id="gameTableArea">
+            
+            <!-- 开始游戏弹窗 -->
+            <div class="game-start-screen" id="gameStartScreen">
+                <div class="game-start-content">
+                    <div class="game-start-title">🃏 准备开始</div>
+                    <div class="game-start-desc">您将与两位AI玩家进行对战<br>获胜即可赢取奖池奖励</div>
+                    <div class="stake-info">
+                        <div class="stake-label">入场质押</div>
+                        <div class="stake-amount">100 TMFS</div>
+                    </div>
+                    <button class="start-game-btn" id="startGameConfirmBtn" onclick="confirmStartGame()">
+                        开始对战
+                    </button>
+                    <a href="index.html" class="cancel-btn">返回首页</a>
+                </div>
+            </div>
+
+            <!-- 游戏结果弹窗 -->
+            <div class="game-result-modal" id="gameResultModal">
+                <div class="result-content">
+                    <div class="result-icon" id="resultIcon">🏆</div>
+                    <div class="result-title" id="resultTitle">你赢了！</div>
+                    <div class="result-amount" id="resultAmount">+180 TMFS</div>
+                    <button class="start-game-btn" onclick="playAgain()">再来一局</button>
+                    <div style="margin-top: 10px;">
+                        <a href="index.html" class="cancel-btn">返回首页</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI玩家区域 -->
+            <div class="ai-players-row">
+                <!-- 左侧AI -->
+                <div class="ai-player-box" id="aiLeftBox">
+                    <div class="ai-avatar-wrap">
+                        <div class="ai-avatar" id="aiLeftAvatar">🤖</div>
+                    </div>
+                    <div class="ai-info">
+                        <div class="ai-name">AI-李白</div>
+                        <div class="ai-card-count" id="aiLeftCount">17张</div>
+                        <div class="ai-status" id="aiLeftStatus" style="display: none;">思考中...</div>
+                    </div>
+                </div>
+
+                <!-- 右侧AI -->
+                <div class="ai-player-box" id="aiRightBox">
+                    <div class="ai-avatar-wrap">
+                        <div class="ai-avatar" id="aiRightAvatar">🤖</div>
+                    </div>
+                    <div class="ai-info">
+                        <div class="ai-name">AI-杜甫</div>
+                        <div class="ai-card-count" id="aiRightCount">17张</div>
+                        <div class="ai-status" id="aiRightStatus" style="display: none;">等待中</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中央牌桌区域 -->
+            <div class="table-center-area">
+                <!-- 地主牌 -->
+                <div class="landlord-cards-area" id="landlordCards">
+                    <div class="landlord-card">?</div>
+                    <div class="landlord-card">?</div>
+                    <div class="landlord-card">?</div>
+                </div>
+
+                <!-- 出牌区域 -->
+                <div class="play-area">
+                    <div class="last-play-info" id="lastPlayInfo">等待游戏开始...</div>
+                    <div class="cards-on-table" id="cardsOnTable">
+                        <!-- 动态显示出的牌 -->
+                    </div>
+                </div>
+
+                <!-- 游戏状态栏 -->
+                <div class="game-status-bar" id="gameStatusBar">点击"开始对战"进入游戏</div>
+            </div>
+
+            <!-- 玩家区域 -->
+            <div class="player-section">
+                <!-- 手牌区域 -->
+                <div class="hand-area" id="handArea">
+                    <!-- 动态生成手牌 -->
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="controls-area" id="gameControls">
+                    <!-- 动态生成按钮 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const CONFIG = window.CONTRACT_CONFIG || {};
+        const TOKEN_ABI = CONFIG.tokenABI || [];
+        const GAME_ABI = CONFIG.gameABI || [];
+        const TOKEN_ADDRESS = CONFIG.tokenAddress;
+        const GAME_ADDRESS = CONFIG.gameAddress;
+        const CHAIN_ID = CONFIG.chainId || "0x38";
+        
+        // ==================== 全局变量 ====================
+        let provider = null;
+        let signer = null;
+        let tokenContract = null;
+        let gameContract = null;
+        let userAddress = null;
+        let tokenDecimals = CONFIG.decimals || 18;
+        
+        // 游戏状态
+        const GameState = {
+            IDLE: 'idle',
+            DEALING: 'dealing',
+            CALLING: 'calling',
+            PLAYING: 'playing',
+            ENDED: 'ended'
+        };
+        
+        let currentGameState = GameState.IDLE;
+        let gameData = {
+            roomId: null,
+            playerHand: [],
+            selectedCards: [],
+            lastPlayedCards: [],
+            lastPlayedBy: null,
+            currentTurn: null,
+            landlord: null,
+            aiLeftCards: 17,
+            aiRightCards: 17,
+            playerCards: 17,
+            potAmount: 100,
+            multiplier: 1,
+            canSkip: false
+        };
+
+        // ==================== 工具函数 ====================
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('txToast');
+            toast.textContent = message;
+            toast.className = 'tx-toast ' + (isError ? 'error' : '') + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ==================== 初始化 ====================
+        async function init() {
+            if (!window.ethereum) {
+                showToast('请安装 MetaMask！', true);
+                return;
+            }
+            
+            try {
+                // 检查网络
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                if (chainId !== CHAIN_ID) {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CHAIN_ID }]
+                    });
+                }
+                
+                provider = new ethers.BrowserProvider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = await provider.getSigner();
+                userAddress = await signer.getAddress();
+                
+                // 初始化合约
+                if (TOKEN_ADDRESS) {
+                    tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+                }
+                if (GAME_ADDRESS) {
+                    gameContract = new ethers.Contract(GAME_ADDRESS, GAME_ABI, signer);
+                }
+                
+                console.log('游戏页面已初始化，用户:', userAddress);
+                
+            } catch (error) {
+                console.error('初始化失败:', error);
+                showToast('连接钱包失败: ' + error.message, true);
+            }
+        }
+
+        // ==================== 游戏逻辑 ====================
+        
+        // 确认开始游戏
+        async function confirmStartGame() {
+            const btn = document.getElementById('startGameConfirmBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> 准备中...';
+            
+            try {
+                // TODO: 调用合约创建游戏房间
+                // const tx = await gameContract.createRoom(ethers.parseUnits('100', tokenDecimals));
+                // const receipt = await tx.wait();
+                // gameData.roomId = receipt.events[0].args.roomId;
+                
+                // 模拟
+                gameData.roomId = '001';
+                gameData.potAmount = 100;
+                
+                document.getElementById('gameStartScreen').style.display = 'none';
+                document.getElementById('gameRoomId').textContent = gameData.roomId;
+                document.getElementById('gamePotAmount').textContent = gameData.potAmount;
+                
+                await startDealing();
+                
+            } catch (error) {
+                showToast('开始游戏失败: ' + error.message, true);
+                btn.disabled = false;
+                btn.innerHTML = '开始对战';
+            }
+        }
+
+        // 发牌
+        async function startDealing() {
+            currentGameState = GameState.DEALING;
+            document.getElementById('gameStatusBar').textContent = '正在发牌...';
+            
+            // TODO: 从合约获取手牌
+            // const hand = await gameContract.getPlayerHand(gameData.roomId, userAddress);
+            
+            // 模拟生成17张牌
+            gameData.playerHand = generateRandomHand();
+            gameData.playerCards = 17;
+            
+            await animateDealing();
+            startCallingLandlord();
+        }
+
+        // 生成随机手牌
+        function generateRandomHand() {
+            const suits = ['♠️', '♥️', '♣️', '♦️'];
+            const ranks = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
+            const deck = [];
+            
+            for (let s of suits) {
+                for (let r of ranks) {
+                    deck.push({ rank: r, suit: s, value: ranks.indexOf(r) });
+                }
+            }
+            deck.push({ rank: '小王', suit: '', value: 13 });
+            deck.push({ rank: '大王', suit: '', value: 14 });
+            
+            const hand = [];
+            for (let i = 0; i < 17; i++) {
+                const idx = Math.floor(Math.random() * deck.length);
+                hand.push(deck.splice(idx, 1)[0]);
+            }
+            
+            return hand.sort((a, b) => a.value - b.value);
+        }
+
+        // 发牌动画
+        async function animateDealing() {
+            const handArea = document.getElementById('handArea');
+            handArea.innerHTML = '';
+            
+            for (let i = 0; i < gameData.playerHand.length; i++) {
+                setTimeout(() => renderHand(), i * 50);
+            }
+            
+            await new Promise(r => setTimeout(r, 1000));
+        }
+
+        // 渲染手牌
+        function renderHand() {
+            const handArea = document.getElementById('handArea');
+            handArea.innerHTML = '';
+            
+            const totalCards = gameData.playerHand.length;
+            const cardWidth = 46;
+            const overlap = 28;
+            const totalWidth = cardWidth + (totalCards - 1) * overlap;
+            const containerWidth = handArea.offsetWidth || 300;
+            const startX = (containerWidth - totalWidth) / 2;
+            
+            gameData.playerHand.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'hand-card';
+                if (card.suit === '♥️' || card.suit === '♦️') {
+                    cardEl.classList.add('card-red');
+                } else {
+                    cardEl.classList.add('card-black');
+                }
+                
+                if (gameData.selectedCards.includes(index)) {
+                    cardEl.classList.add('selected');
+                }
+                
+                cardEl.textContent = card.rank + card.suit;
+                cardEl.style.left = Math.max(10, startX + index * overlap) + 'px';
+                cardEl.style.zIndex = index;
+                cardEl.onclick = () => toggleCardSelection(index);
+                
+                handArea.appendChild(cardEl);
+            });
+        }
+
+        // 选择牌
+        function toggleCardSelection(index) {
+            const idx = gameData.selectedCards.indexOf(index);
+            if (idx > -1) {
+                gameData.selectedCards.splice(idx, 1);
+            } else {
+                gameData.selectedCards.push(index);
+            }
+            renderHand();
+            updatePlayButton();
+        }
+
+        // 叫地主阶段
+        function startCallingLandlord() {
+            currentGameState = GameState.CALLING;
+            document.getElementById('gameStatusBar').textContent = '请选择是否叫地主';
+            document.getElementById('landlordCards').classList.add('show');
+            
+            const controls = document.getElementById('gameControls');
+            controls.innerHTML = `
+                <button class="game-btn btn-secondary" onclick="passLandlord()">不叫</button>
+                <button class="game-btn btn-primary" onclick="callLandlord()">叫地主</button>
+            `;
+        }
+
+        // 不叫
+        function passLandlord() {
+            setTimeout(() => {
+                const rand = Math.random();
+                if (rand < 0.33) {
+                    gameData.landlord = 'player';
+                    becomeLandlord();
+                } else if (rand < 0.66) {
+                    gameData.landlord = 'aiLeft';
+                    aiBecomeLandlord('aiLeft');
+                } else {
+                    gameData.landlord = 'aiRight';
+                    aiBecomeLandlord('aiRight');
+                }
+            }, 1000);
+        }
+
+        // 叫地主
+        function callLandlord() {
+            gameData.landlord = 'player';
+            becomeLandlord();
+        }
+
+        // 玩家成为地主
+        function becomeLandlord() {
+            document.getElementById('gameStatusBar').textContent = '你是地主！获得3张底牌';
+            
+            const extraCards = [
+                { rank: '2', suit: '♠️', value: 12 },
+                { rank: '小王', suit: '', value: 13 },
+                { rank: '大王', suit: '', value: 14 }
+            ];
+            gameData.playerHand.push(...extraCards);
+            gameData.playerHand.sort((a, b) => a.value - b.value);
+            gameData.playerCards = 20;
+            
+            renderHand();
+            document.getElementById('landlordCards').innerHTML = 
+                extraCards.map(c => `<div class="landlord-card">${c.rank}${c.suit}</div>`).join('');
+            
+            setTimeout(() => startPlaying('player'), 1500);
+        }
+
+        // AI成为地主
+        function aiBecomeLandlord(ai) {
+            const aiName = ai === 'aiLeft' ? 'AI-李白' : 'AI-杜甫';
+            document.getElementById('gameStatusBar').textContent = `${aiName} 成为地主`;
+            
+            document.getElementById(ai === 'aiLeft' ? 'aiLeftAvatar' : 'aiRightAvatar').classList.add('landlord');
+            
+            if (ai === 'aiLeft') gameData.aiLeftCards = 20;
+            else gameData.aiRightCards = 20;
+            
+            document.getElementById(ai === 'aiLeft' ? 'aiLeftCount' : 'aiRightCount').textContent = '20张';
+            
+            setTimeout(() => startPlaying(ai), 1500);
+        }
+
+        // 开始出牌
+        function startPlaying(firstPlayer) {
+            currentGameState = GameState.PLAYING;
+            gameData.currentTurn = firstPlayer;
+            gameData.lastPlayedCards = [];
+            gameData.lastPlayedBy = null;
+            gameData.canSkip = false;
+            
+            updateTurn();
+        }
+
+        // 更新回合
+        function updateTurn() {
+            document.getElementById('aiLeftAvatar').classList.remove('active');
+            document.getElementById('aiRightAvatar').classList.remove('active');
+            document.getElementById('aiLeftStatus').style.display = 'none';
+            document.getElementById('aiRightStatus').style.display = 'none';
+            
+            if (gameData.currentTurn === 'player') {
+                document.getElementById('gameStatusBar').textContent = gameData.canSkip ? '请出牌（可选择跳过）' : '请出牌';
+                playerTurn();
+            } else if (gameData.currentTurn === 'aiLeft') {
+                document.getElementById('aiLeftAvatar').classList.add('active');
+                document.getElementById('aiLeftStatus').style.display = 'block';
+                document.getElementById('aiLeftStatus').textContent = '思考中...';
+                setTimeout(() => aiPlay('aiLeft'), 1500);
+            } else {
+                document.getElementById('aiRightAvatar').classList.add('active');
+                document.getElementById('aiRightStatus').style.display = 'block';
+                document.getElementById('aiRightStatus').textContent = '思考中...';
+                setTimeout(() => aiPlay('aiRight'), 1500);
+            }
+        }
+
+        // 玩家回合
+        function playerTurn() {
+            const controls = document.getElementById('gameControls');
+            
+            if (gameData.canSkip) {
+                controls.innerHTML = `
+                    <button class="game-btn btn-secondary" onclick="playerSkip()">跳过</button>
+                    <button class="game-btn btn-primary" id="playBtn" onclick="playerPlayCards()" disabled>出牌</button>
+                `;
+            } else {
+                controls.innerHTML = `
+                    <button class="game-btn btn-primary" id="playBtn" onclick="playerPlayCards()" disabled>出牌</button>
+                `;
+            }
+            
+            updatePlayButton();
+        }
+
+        // 更新出牌按钮
+        function updatePlayButton() {
+            const playBtn = document.getElementById('playBtn');
+            if (!playBtn) return;
+            
+            const selected = gameData.selectedCards.map(i => gameData.playerHand[i]);
+            const isValid = validateCards(selected, gameData.lastPlayedCards);
+            
+            playBtn.disabled = !isValid || gameData.selectedCards.length === 0;
+        }
+
+        // 验证牌型（简化）
+        function validateCards(cards, lastCards) {
+            if (cards.length === 0) return false;
+            // TODO: 实现完整牌型验证
+            return true;
+        }
+
+        // 玩家出牌
+        function playerPlayCards() {
+            const indices = gameData.selectedCards.sort((a, b) => b - a);
+            const playedCards = indices.map(i => gameData.playerHand[i]);
+            
+            for (let idx of indices) {
+                gameData.playerHand.splice(idx, 1);
+            }
+            
+            gameData.playerCards = gameData.playerHand.length;
+            gameData.selectedCards = [];
+            
+            showPlayedCards(playedCards, 'player');
+            renderHand();
+            
+            if (gameData.playerCards === 0) {
+                endGame('player');
+                return;
+            }
+            
+            nextTurn('player', playedCards);
+        }
+
+        // 玩家跳过
+        function playerSkip() {
+            if (!gameData.canSkip) {
+                showToast('上家出牌后必须管上，不能跳过', true);
+                return;
+            }
+            
+            showToast('你选择了跳过', false);
+            gameData.selectedCards = [];
+            renderHand();
+            nextTurn('player', null);
+        }
+
+        // AI出牌
+        function aiPlay(ai) {
+            const canPlay = Math.random() > 0.3 || !gameData.canSkip;
+            
+            if (canPlay) {
+                const cardCount = ai === 'aiLeft' ? gameData.aiLeftCards : gameData.aiRightCards;
+                const playCount = Math.min(Math.floor(Math.random() * 3) + 1, cardCount);
+                
+                const playedCards = [];
+                for (let i = 0; i < playCount; i++) {
+                    playedCards.push({ rank: '3', suit: '♠️', value: 0 });
+                }
+                
+                if (ai === 'aiLeft') {
+                    gameData.aiLeftCards -= playCount;
+                    document.getElementById('aiLeftCount').textContent = gameData.aiLeftCards + '张';
+                } else {
+                    gameData.aiRightCards -= playCount;
+                    document.getElementById('aiRightCount').textContent = gameData.aiRightCards + '张';
+                }
+                
+                showPlayedCards(playedCards, ai);
+                
+                if ((ai === 'aiLeft' ? gameData.aiLeftCards : gameData.aiRightCards) === 0) {
+                    endGame(ai);
+                    return;
+                }
+                
+                nextTurn(ai, playedCards);
+            } else {
+                document.getElementById(ai === 'aiLeft' ? 'aiLeftStatus' : 'aiRightStatus').textContent = '要不起';
+                setTimeout(() => nextTurn(ai, null), 1000);
+            }
+        }
+
+        // 显示出的牌
+        function showPlayedCards(cards, who) {
+            const container = document.getElementById('cardsOnTable');
+            const info = document.getElementById('lastPlayInfo');
+            
+            let whoText = who === 'player' ? '你' : (who === 'aiLeft' ? 'AI-李白' : 'AI-杜甫');
+            info.textContent = whoText + '出了';
+            
+            container.innerHTML = cards.map(card => `
+                <div class="card-played ${card.suit === '♥️' || card.suit === '♦️' ? 'card-red' : 'card-black'}">
+                    ${card.rank}${card.suit}
+                </div>
+            `).join('');
+            
+            gameData.lastPlayedCards = cards;
+            gameData.lastPlayedBy = who;
+        }
+
+        // 转下家
+        function nextTurn(current, playedCards) {
+            const order = ['player', 'aiLeft', 'aiRight'];
+            const currentIdx = order.indexOf(current);
+            const nextIdx = (currentIdx + 1) % 3;
+            const nextPlayer = order[nextIdx];
+            
+            if (playedCards && playedCards.length > 0) {
+                gameData.canSkip = false;
+            } else {
+                gameData.canSkip = true;
+            }
+            
+            if (nextPlayer === gameData.lastPlayedBy) {
+                document.getElementById('cardsOnTable').innerHTML = '';
+                document.getElementById('lastPlayInfo').textContent = '新一轮开始';
+                gameData.lastPlayedCards = [];
+                gameData.lastPlayedBy = null;
+                gameData.canSkip = false;
+            }
+            
+            gameData.currentTurn = nextPlayer;
+            updateTurn();
+        }
+
+        // 游戏结束
+        function endGame(winner) {
+            currentGameState = GameState.ENDED;
+            
+            const modal = document.getElementById('gameResultModal');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const amount = document.getElementById('resultAmount');
+            
+            if (winner === 'player') {
+                icon.textContent = '🏆';
+                title.textContent = '你赢了！';
+                const reward = gameData.potAmount * gameData.multiplier * 2;
+                amount.textContent = '+' + reward + ' TMFS';
+                amount.className = 'result-amount';
+            } else {
+                icon.textContent = '💔';
+                title.textContent = '你输了';
+                amount.textContent = '-' + gameData.potAmount + ' TMFS';
+                amount.className = 'result-amount lose';
+            }
+            
+            modal.classList.add('show');
+        }
+
+        // 再来一局
+        function playAgain() {
+            document.getElementById('gameResultModal').classList.remove('show');
+            resetGame();
+            document.getElementById('gameStartScreen').style.display = 'flex';
+        }
+
+        // 重置游戏
+        function resetGame() {
+            currentGameState = GameState.IDLE;
+            gameData = {
+                roomId: null,
+                playerHand: [],
+                selectedCards: [],
+                lastPlayedCards: [],
+                lastPlayedBy: null,
+                currentTurn: null,
+                landlord: null,
+                aiLeftCards: 17,
+                aiRightCards: 17,
+                playerCards: 17,
+                potAmount: 100,
+                multiplier: 1,
+                canSkip: false
+            };
+            
+            document.getElementById('handArea').innerHTML = '';
+            document.getElementById('cardsOnTable').innerHTML = '';
+            document.getElementById('gameControls').innerHTML = '';
+            document.getElementById('landlordCards').classList.remove('show');
+            document.getElementById('landlordCards').innerHTML = '<div class="landlord-card">?</div><div class="landlord-card">?</div><div class="landlord-card">?</div>';
+            document.getElementById('lastPlayInfo').textContent = '等待游戏开始...';
+            document.getElementById('gameStatusBar').textContent = '点击"开始对战"进入游戏';
+            document.getElementById('gameRoomId').textContent = '---';
+            document.getElementById('gamePotAmount').textContent = '0';
+            
+            document.getElementById('aiLeftAvatar').classList.remove('active', 'landlord');
+            document.getElementById('aiRightAvatar').classList.remove('active', 'landlord');
+            document.getElementById('aiLeftCount').textContent = '17张';
+            document.getElementById('aiRightCount').textContent = '17张';
+            document.getElementById('aiLeftStatus').style.display = 'none';
+            document.getElementById('aiRightStatus').style.display = 'none';
+            
+            document.getElementById('startGameConfirmBtn').disabled = false;
+            document.getElementById('startGameConfirmBtn').innerHTML = '开始对战';
+        }
+
+        // 页面加载时初始化
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
