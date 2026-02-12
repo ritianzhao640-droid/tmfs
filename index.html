@@ -50,8 +50,10 @@
         .stat-sub { font-size: 10px; color: #00a854; margin-top: 2px; font-weight: 600; }
         .stat-sub.ai { color: #8b5cf6; }
         
-        /* 币价模块 */
-        .price-section-full { margin: 0 0 16px; }
+        /* 今日币价 + 分红奖池 双模块布局 */
+        .price-pool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 16px; }
+        
+        /* 今日币价模块 */
         .price-module-full { 
             background: white; 
             border-radius: 20px; 
@@ -59,18 +61,48 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
             border: 1px solid rgba(0,0,0,0.05); 
             display: flex; 
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: center;
         }
-        .price-left { flex: 1; }
-        .price-header-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-        .price-title-text { font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .price-change-full { font-size: 12px; font-weight: 700; color: #00a854; background: rgba(0,168,84,0.1); padding: 4px 8px; border-radius: 12px; }
+        .price-header-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .price-title-text { font-size: 11px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .price-change-full { font-size: 11px; font-weight: 700; color: #00a854; background: rgba(0,168,84,0.1); padding: 3px 6px; border-radius: 10px; }
         .price-change-full.down { color: #dc2626; background: rgba(220,38,38,0.1); }
-        .price-value-full { font-size: 28px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
-        .price-chart-full { width: 100px; height: 40px; }
-        .price-chart-full svg { width: 100%; height: 100%; }
+        .price-value-full { font-size: 22px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
         .price-loading { font-size: 12px; color: #999; }
+        
+        /* 分红奖池模块 - 与AI奖池样式一致 */
+        .dividend-pool-module { 
+            background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); 
+            border-radius: 20px; 
+            padding: 20px; 
+            box-shadow: 0 4px 20px rgba(245,158,11,0.1); 
+            border: 1px solid rgba(245,158,11,0.2); 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+        .dividend-pool-label { 
+            font-size: 11px; 
+            color: #92400e; 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+        .dividend-pool-value { 
+            font-size: 22px; 
+            font-weight: 800; 
+            color: #b45309; 
+            letter-spacing: -0.5px; 
+            margin-bottom: 2px;
+        }
+        .dividend-pool-sub { 
+            font-size: 10px; 
+            color: #d97706; 
+            font-weight: 600; 
+        }
         
         /* 游戏入口 */
         .game-section-full { margin-bottom: 20px; }
@@ -222,7 +254,7 @@
             </div>
 
             <div class="container">
-                <!-- 三卡片：余额 + 燃烧积分 + AI池 -->
+                <!-- 第一行：余额 + 燃烧积分 + AI池 -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">我的余额</div>
@@ -241,27 +273,28 @@
                     </div>
                 </div>
 
-                <!-- 今日币价 - 真实数据 -->
-                <div class="price-section-full">
+                <!-- 第二行：今日币价 + 分红奖池（双模块并行） -->
+                <div class="price-pool-grid">
+                    <!-- 今日币价 -->
                     <div class="price-module-full">
-                        <div class="price-left">
-                            <div class="price-header-row">
-                                <div class="price-title-text">今日币价</div>
-                                <div class="price-change-full" id="priceChange">--</div>
-                            </div>
-                            <div class="price-value-full" id="tokenPrice">
-                                <span class="price-loading">加载中...</span>
-                            </div>
+                        <div class="price-header-row">
+                            <div class="price-title-text">今日币价</div>
+                            <div class="price-change-full" id="priceChange">--</div>
                         </div>
-                        <div class="price-chart-full">
-                            <svg viewBox="0 0 200 40" preserveAspectRatio="none">
-                                <path d="M0,30 Q25,28 50,25 T100,20 T150,15 T200,10" fill="none" stroke="#00a854" stroke-width="2" />
-                            </svg>
+                        <div class="price-value-full" id="tokenPrice">
+                            <span class="price-loading">加载中...</span>
                         </div>
+                    </div>
+                    
+                    <!-- 分红奖池 -->
+                    <div class="dividend-pool-module">
+                        <div class="dividend-pool-label">💰 分红奖池</div>
+                        <div class="dividend-pool-value" id="dividendPoolAmount">0.0000</div>
+                        <div class="dividend-pool-sub">WBNB 待分配</div>
                     </div>
                 </div>
 
-                <!-- 游戏入口 -->
+                <!-- 第三行：游戏入口 -->
                 <div class="game-section-full">
                     <a href="game.html" class="game-module-full" onclick="return checkWalletBeforeGame()">
                         <div class="game-status-full">🔥 热门对战</div>
@@ -350,7 +383,7 @@
             </div>
         </div>
 
-        <!-- 排行页面 - 真实数据 -->
+        <!-- 排行页面 -->
         <div id="rankPage">
             <div class="rank-header">
                 <div class="rank-title">🏆 燃烧排行</div>
@@ -426,12 +459,16 @@
         const HAS_DIVIDEND_CONTRACT = DIVIDEND_ADDRESS && DIVIDEND_ABI.length > 0;
         const HAS_GAME_CONTRACT = GAME_ADDRESS && GAME_ABI.length > 0;
 
+        // WBNB 合约地址 (BSC主网)
+        const WBNB_ADDRESS = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+
         // ==================== 全局变量 ====================
         let provider = null;
         let signer = null;
         let tokenContract = null;
         let dividendContract = null;
         let gameContract = null;
+        let wbnbContract = null; // WBNB合约实例
         let userAddress = null;
         let longPressTimer = null;
         let longPressInterval = null;
@@ -458,8 +495,6 @@
         // ==================== 真实币价获取 ====================
         async function fetchTokenPrice() {
             try {
-                // 使用 DexScreener API 获取真实价格（免费，无需API Key）
-                // 或者使用 PancakeSwap API
                 const response = await fetch(
                     `https://api.dexscreener.com/latest/dex/tokens/${TOKEN_ADDRESS}`
                 );
@@ -469,7 +504,6 @@
                 const data = await response.json();
                 
                 if (data.pairs && data.pairs.length > 0) {
-                    // 取第一个交易对的价格
                     const pair = data.pairs[0];
                     const price = parseFloat(pair.priceUsd);
                     const priceChange24h = parseFloat(pair.priceChange?.h24 || 0);
@@ -491,26 +525,37 @@
             }
         }
 
-        // ==================== AI奖池 - 真实数据 ====================
+        // ==================== 分红奖池 - 真实WBNB数量 ====================
+        async function loadDividendPoolData() {
+            try {
+                let poolWBNB = '0.0000';
+                
+                if (HAS_DIVIDEND_CONTRACT && dividendContract && wbnbContract) {
+                    // 查询分红合约中的WBNB余额
+                    const wbnbBalance = await wbnbContract.balanceOf(DIVIDEND_ADDRESS);
+                    poolWBNB = ethers.formatEther(wbnbBalance);
+                    
+                    console.log('分红奖池WBNB:', poolWBNB);
+                } else {
+                    console.log('分红合约未配置，无法读取奖池');
+                }
+                
+                document.getElementById('dividendPoolAmount').textContent = formatAmount(poolWBNB, 4);
+                
+            } catch (error) {
+                console.error('加载分红奖池失败:', error);
+                document.getElementById('dividendPoolAmount').textContent = '0.0000';
+            }
+        }
+
+        // ==================== AI奖池 ====================
         async function loadAIPoolData() {
             try {
                 let aiPoolBalance = '0.00';
                 
                 if (HAS_GAME_CONTRACT && gameContract) {
-                    // 游戏合约部署后，从合约读取
                     const poolBalance = await gameContract.getAIPoolBalance().catch(() => 0);
                     aiPoolBalance = ethers.formatUnits(poolBalance, TOKEN_DECIMALS);
-                } else if (HAS_TOKEN_CONTRACT && tokenContract) {
-                    // 方案1：从代币合约的税收地址读取（如果税收1%进AI池）
-                    // 或者从营销钱包读取，或者显示为 0 等待游戏合约部署
-                    
-                    // 暂时显示为 0，因为游戏合约未部署
-                    aiPoolBalance = '0.00';
-                    
-                    // 如果你想显示税收累积的金额，需要知道税收钱包地址
-                    // const taxWallet = "0x..."; // 你的税收钱包地址
-                    // const balance = await tokenContract.balanceOf(taxWallet);
-                    // aiPoolBalance = ethers.formatUnits(balance, TOKEN_DECIMALS);
                 }
                 
                 document.getElementById('aiPoolAmount').textContent = formatAmount(aiPoolBalance);
@@ -595,6 +640,7 @@
                 signer = await provider.getSigner();
                 userAddress = await signer.getAddress();
                 
+                // 初始化合约
                 if (HAS_TOKEN_CONTRACT) {
                     tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
                 }
@@ -604,6 +650,15 @@
                 if (HAS_GAME_CONTRACT) {
                     gameContract = new ethers.Contract(GAME_ADDRESS, GAME_ABI, signer);
                 }
+                
+                // 初始化WBNB合约（用于查询分红奖池余额）
+                // WBNB是标准ERC20，使用简化ABI
+                const wbnbABI = [
+                    "function balanceOf(address account) view returns (uint256)",
+                    "function decimals() view returns (uint8)",
+                    "function symbol() view returns (string)"
+                ];
+                wbnbContract = new ethers.Contract(WBNB_ADDRESS, wbnbABI, signer);
                 
                 btn.classList.add('connected');
                 btn.innerHTML = '✓';
@@ -633,6 +688,7 @@
                 }
                 
                 await loadDividendData();
+                await loadDividendPoolData(); // 加载分红奖池
                 await loadAIPoolData();
                 await checkAllowance();
                 await fetchTokenPrice();
@@ -785,6 +841,7 @@
                 showToast('领取交易已发送...');
                 await tx.wait();
                 await loadDividendData();
+                await loadDividendPoolData(); // 刷新奖池
                 showToast('WBNB分红领取成功！');
             } catch (error) {
                 showToast('领取失败: ' + error.message, true);
@@ -794,7 +851,7 @@
             }
         }
 
-        // ==================== 真实排行数据 ====================
+        // ==================== 排行功能 ====================
         async function loadRankData() {
             const rankList = document.getElementById('rankList');
             
@@ -806,16 +863,6 @@
             rankList.innerHTML = '<div class="rank-loading">加载排行数据...</div>';
             
             try {
-                // 从合约获取真实排行数据
-                // 注意：这需要你的合约支持查询排行，如果不支持，需要手动维护或使用事件日志
-                
-                // 方案1：如果合约有 getTopBurners 函数
-                // const topBurners = await dividendContract.getTopBurners(10);
-                
-                // 方案2：从事件日志中解析（需要历史数据）
-                // 这里先用模拟数据展示格式，你需要替换为真实数据源
-                
-                // 临时：显示提示等待真实数据
                 rankList.innerHTML = `
                     <div class="rank-empty">
                         <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
@@ -826,18 +873,15 @@
                     </div>
                 `;
                 
-                // 更新我的排名显示
                 const userBurned = await dividendContract.userBurned(userAddress).catch(() => 0);
                 const totalBurned = await dividendContract.totalBurned().catch(() => 0);
                 
                 const myBurnAmount = ethers.formatUnits(userBurned, TOKEN_DECIMALS);
                 const globalBurnAmount = ethers.formatUnits(totalBurned, TOKEN_DECIMALS);
                 
-                // 简单估算排名（假设均匀分布）
                 let rank = '99+';
                 if (myBurnAmount > 0 && globalBurnAmount > 0) {
                     const ratio = parseFloat(myBurnAmount) / parseFloat(globalBurnAmount);
-                    // 这只是一个粗略估算，真实排名需要链下索引
                     rank = '~' + Math.ceil(100 / (ratio * 100 + 1));
                 }
                 
@@ -855,7 +899,6 @@
         function switchRankTab(tab) {
             document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            // TODO: 切换燃烧排行/收益排行
         }
 
         // ==================== 页面切换 ====================
@@ -893,9 +936,7 @@
 
         window.addEventListener('load', () => {
             console.log('✅ DApp 已加载');
-            // 页面加载时获取价格（无需连接钱包）
             fetchTokenPrice();
-            // 每30秒刷新价格
             setInterval(fetchTokenPrice, 30000);
         });
     </script>
