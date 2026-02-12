@@ -27,7 +27,7 @@
         }
         
         /* 页面容器 */
-        #homePage, #burnPage, #claimPage, #gamePage, #rankPage { min-height: 100vh; display: none; position: relative; }
+        #homePage, #burnPage, #claimPage, #rankPage { min-height: 100vh; display: none; position: relative; }
         #homePage { display: block; animation: fadeIn 0.4s ease; }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -87,6 +87,8 @@
             overflow: hidden;
             cursor: pointer;
             transition: transform 0.2s;
+            text-decoration: none;
+            display: block;
         }
         .game-module-full:active { transform: scale(0.98); }
         .game-module-full::before { content: '♠️'; position: absolute; top: -10px; right: -10px; font-size: 80px; opacity: 0.05; }
@@ -108,6 +110,7 @@
             position: relative; 
             z-index: 1;
             display: inline-block;
+            pointer-events: none;
         }
         
         /* 燃烧页面 */
@@ -136,7 +139,7 @@
         .info-label { font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 500; }
         .info-value { font-size: 16px; font-weight: 700; color: #1a1a1a; }
         
-        /* 优化后的领取分红页面 - 紧凑版 */
+        /* 领取分红页面 - 紧凑版 */
         .claim-container { padding: 16px; }
         .claim-header { background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%); border: 1px solid rgba(245,158,11,0.2); border-radius: 20px; padding: 24px; text-align: center; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(245,158,11,0.1); }
         .claim-label { font-size: 12px; color: #92400e; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
@@ -152,41 +155,6 @@
         
         .claim-rule { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 12px; color: #666; line-height: 1.6; text-align: center; }
         .claim-rule-title { font-weight: 700; color: #1a1a1a; margin-bottom: 6px; font-size: 13px; }
-        
-        /* 游戏页面 */
-        .game-table { position: relative; height: calc(100vh - 200px); display: flex; flex-direction: column; }
-        
-        /* AI玩家 */
-        .ai-players { display: flex; justify-content: space-between; padding: 20px 40px; position: relative; }
-        .ai-player { text-align: center; }
-        .ai-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 3px solid white; position: relative; }
-        .ai-avatar.landlord::after { content: '👑'; position: absolute; top: -5px; right: -5px; font-size: 16px; background: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
-        .ai-avatar.active { border-color: #00d26a; box-shadow: 0 0 0 3px rgba(0,210,106,0.2); }
-        .ai-name { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
-        .ai-count { font-size: 11px; color: #999; background: rgba(0,0,0,0.05); padding: 2px 8px; border-radius: 10px; display: inline-block; }
-        .ai-status { font-size: 10px; color: #00a854; margin-top: 4px; font-weight: 600; }
-        
-        /* 牌桌中央 */
-        .table-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .pot-info { background: rgba(0,0,0,0.8); color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
-        .last-play-area { min-height: 100px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: -5px; margin-bottom: 20px; }
-        .card-played { width: 40px; height: 56px; background: white; border-radius: 6px; border: 1px solid #ddd; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-right: -10px; }
-        .card-red { color: #dc2626; }
-        .card-black { color: #1a1a1a; }
-        .play-info { font-size: 13px; color: #666; text-align: center; }
-        
-        /* 玩家区域 */
-        .player-area { background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 20%, #ffffff 100%); padding: 20px 16px 30px; position: fixed; bottom: 80px; left: 0; right: 0; z-index: 10; }
-        .player-hand { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding: 10px 0; }
-        .hand-card { width: 44px; height: 62px; background: white; border-radius: 6px; border: 1px solid #e0e0e0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); position: relative; }
-        .hand-card.selected { transform: translateY(-15px); border-color: #00d26a; box-shadow: 0 4px 12px rgba(0,210,106,0.3); }
-        .hand-card.back { background: linear-gradient(135deg, #1a3a8f 0%, #2d5bc6 100%); border: none; }
-        
-        .game-controls { display: flex; gap: 10px; justify-content: center; }
-        .game-btn { padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all 0.3s; }
-        .game-btn-primary { background: #1a1a1a; color: white; flex: 1; max-width: 120px; }
-        .game-btn-secondary { background: #f5f5f5; color: #666; border: 1px solid #e0e0e0; }
-        .game-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
         /* 排行页面 */
         .rank-header { padding: 60px 20px 20px; text-align: center; background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%); }
@@ -257,7 +225,7 @@
             </div>
 
             <div class="container">
-                <!-- 第一行：余额 + AI池（按手绘图：左余额，右AI池） -->
+                <!-- 第一行：余额 + AI池 -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">我的余额</div>
@@ -271,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- 第二行：今日币价（全宽长条） -->
+                <!-- 第二行：今日币价 -->
                 <div class="price-section-full">
                     <div class="price-module-full">
                         <div class="price-left">
@@ -289,61 +257,14 @@
                     </div>
                 </div>
 
-                <!-- 第三行：斗地主游戏入口（全宽大方块） -->
+                <!-- 第三行：斗地主游戏入口 - 改为链接跳转 -->
                 <div class="game-section-full">
-                    <div class="game-module-full" onclick="startGame()">
+                    <a href="game.html" class="game-module-full" onclick="return checkWalletBeforeGame()">
                         <div class="game-status-full">🔥 热门对战</div>
                         <div class="game-title-full">开始斗地主</div>
                         <div class="game-desc-full">1v2 AI对战 | 赢取代币奖励</div>
                         <button class="play-btn-full">立即开始</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 游戏页面 -->
-        <div id="gamePage">
-            <div class="top-nav">
-                <button class="back-btn" onclick="exitGame()">←</button>
-                <div class="top-title">房间 #<span id="gameRoomId">001</span></div>
-                <div class="top-action" id="gamePot">奖池: 0 TMFS</div>
-            </div>
-
-            <div class="game-table">
-                <div class="ai-players">
-                    <div class="ai-player" id="aiLeft">
-                        <div class="ai-avatar">🤖</div>
-                        <div class="ai-name">AI-李白</div>
-                        <div class="ai-count" id="aiLeftCards">17张</div>
-                        <div class="ai-status" id="aiLeftStatus">思考中...</div>
-                    </div>
-                    <div class="ai-player" id="aiRight">
-                        <div class="ai-avatar">🤖</div>
-                        <div class="ai-name">AI-杜甫</div>
-                        <div class="ai-count" id="aiRightCards">17张</div>
-                        <div class="ai-status" id="aiRightStatus">等待中</div>
-                    </div>
-                </div>
-
-                <div class="table-center">
-                    <div class="pot-info" id="centerPot">💰 奖池: 0 TMFS | 倍数: x1</div>
-                    <div class="last-play-area" id="lastPlayArea">
-                        <div class="play-info">点击"开始对战"开始游戏</div>
-                    </div>
-                    <div class="play-info" id="turnInfo">等待玩家加入...</div>
-                </div>
-            </div>
-
-            <div class="player-area">
-                <div class="player-hand" id="playerHand">
-                    <!-- 手牌动态生成 -->
-                </div>
-                <div class="game-controls" id="gameControls" style="display: none;">
-                    <button class="game-btn game-btn-secondary" onclick="skipTurn()">跳过</button>
-                    <button class="game-btn game-btn-primary" onclick="playCards()">出牌</button>
-                </div>
-                <div class="game-controls" id="startControl">
-                    <button class="game-btn game-btn-primary" onclick="startGame()" style="max-width: 200px;">开始对战 (质押 100 TMFS)</button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -388,7 +309,7 @@
             </div>
         </div>
 
-        <!-- 领取分红页面 - 优化紧凑版 -->
+        <!-- 领取分红页面 -->
         <div id="claimPage">
             <div class="top-nav">
                 <button class="back-btn" onclick="showPage('home')">←</button>
@@ -443,7 +364,6 @@
             </div>
 
             <div class="rank-list" id="rankList">
-                <!-- 动态生成 -->
                 <div class="rank-item">
                     <div class="rank-number top1">1</div>
                     <div class="rank-info">
@@ -468,7 +388,6 @@
                     </div>
                     <div class="rank-reward">+3.2 BNB</div>
                 </div>
-                <!-- 更多排名... -->
             </div>
 
             <div class="my-rank">
@@ -527,14 +446,12 @@
         let signer = null;
         let tokenContract = null;
         let dividendContract = null;
-        let gameContract = null; // TODO: Contract Call - 游戏合约实例
         let userAddress = null;
         let tokenDecimals = CONFIG.decimals || 18;
         let tokenSymbol = "TMFS";
         let longPressTimer = null;
         let longPressInterval = null;
         const LONG_PRESS_DELAY = 500;
-        let selectedCards = []; // 选中的牌索引
 
         // ==================== 工具函数 ====================
         function showToast(message, isError = false) {
@@ -554,16 +471,19 @@
             return parseFloat(amount).toFixed(decimals);
         }
 
+        // ==================== 游戏入口检查 ====================
+        function checkWalletBeforeGame() {
+            if (!userAddress) {
+                showToast('请先连接钱包', true);
+                return false;
+            }
+            // 可以在这里添加其他检查，比如余额是否足够
+            return true;
+        }
+
         // ==================== 价格查询 ====================
         async function fetchTokenPrice() {
-            // TODO: Contract Call - 从合约或价格预言机查询TMFS实时价格
-            // 建议接口: 
-            // 1. 调用 DEX Router (PancakeSwap) getAmountsOut 查询1TMFS对USDT价格
-            // 2. 或调用自定义 PriceOracle 合约 getPrice()
-            // 3. 或从后端API获取
-            
             try {
-                // 模拟数据，实际应从合约获取
                 const mockPrice = 0.0042;
                 const mockChange = 5.24;
                 
@@ -609,7 +529,6 @@
             btn.innerHTML = '<span class="loading"></span>';
             
             try {
-                // 检查网络
                 const chainId = await window.ethereum.request({ method: 'eth_chainId' });
                 if (chainId !== CHAIN_ID) {
                     await window.ethereum.request({
@@ -623,14 +542,10 @@
                 signer = await provider.getSigner();
                 userAddress = await signer.getAddress();
                 
-                // 初始化合约
                 tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
                 if (HAS_DIVIDEND_CONTRACT) {
                     dividendContract = new ethers.Contract(DIVIDEND_ADDRESS, DIVIDEND_ABI, signer);
                 }
-                
-                // TODO: Contract Call - 初始化游戏合约
-                // gameContract = new ethers.Contract(GAME_ADDRESS, GAME_ABI, signer);
                 
                 btn.classList.add('connected');
                 btn.innerHTML = '✓';
@@ -651,11 +566,9 @@
             if (!tokenContract || !userAddress) return;
             
             try {
-                // TODO: Contract Call - 获取用户余额
                 const balance = await tokenContract.balanceOf(userAddress);
                 document.getElementById('balance').textContent = formatAmount(ethers.formatUnits(balance, tokenDecimals));
                 
-                // TODO: Contract Call - 获取AI奖池余额 (从游戏合约或奖池合约)
                 const totalSupply = await tokenContract.totalSupply();
                 document.getElementById('aiPoolAmount').textContent = formatAmount(ethers.formatUnits(totalSupply, tokenDecimals) * 0.01);
                 
@@ -665,7 +578,6 @@
                     await loadDividendData();
                 }
                 
-                // TODO: Contract Call - 获取实时价格
                 await fetchTokenPrice();
                 
             } catch (error) {
@@ -713,11 +625,9 @@
             try {
                 const amountWei = ethers.parseUnits(amount.toString(), tokenDecimals);
                 
-                // TODO: Contract Call - 检查余额
                 const balance = await tokenContract.balanceOf(userAddress);
                 if (balance < amountWei) throw new Error('余额不足');
                 
-                // TODO: Contract Call - 检查授权并执行burn
                 const allowance = await tokenContract.allowance(userAddress, DIVIDEND_ADDRESS);
                 if (allowance < amountWei) {
                     showToast('正在授权...');
@@ -745,13 +655,9 @@
         async function loadDividendData() {
             if (!HAS_DIVIDEND_CONTRACT || !dividendContract || !userAddress) return;
             try {
-                // TODO: Contract Call - 获取可领取分红
                 const pending = await dividendContract.check(userAddress).catch(() => 0);
-                // TODO: Contract Call - 获取用户积分
                 const points = await dividendContract.points(userAddress).catch(() => 0);
-                // TODO: Contract Call - 获取已领取累计
                 const claimed = await dividendContract.claimed(userAddress).catch(() => 0);
-                // TODO: Contract Call - 获取全球燃烧总量
                 const totalBurned = await dividendContract.totalBurned().catch(() => 0);
                 
                 const pendingWBNB = ethers.formatEther(pending);
@@ -776,7 +682,6 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span>';
             try {
-                // TODO: Contract Call - 领取分红
                 const tx = await dividendContract.claim();
                 showToast('领取交易已发送...');
                 await tx.wait();
@@ -790,109 +695,10 @@
             }
         }
 
-        // ==================== 游戏功能 ====================
-        async function startGame() {
-            if (!userAddress) { showToast('请先连接钱包', true); return; }
-            
-            // TODO: Contract Call - 创建游戏房间
-            // 1. 调用 gameContract.createRoom(stakeAmount) 
-            // 2. 监听 GameStarted 事件获取房间ID
-            // 3. 或使用 AI 对战模式直接开始
-            
-            showPage('game');
-            showToast('游戏开始！对战AI-李白和AI-杜甫');
-            
-            // 模拟发牌
-            setTimeout(() => {
-                document.getElementById('startControl').style.display = 'none';
-                document.getElementById('gameControls').style.display = 'flex';
-                renderHandCards();
-                document.getElementById('turnInfo').textContent = '请选择要出的牌';
-            }, 1000);
-            
-            // TODO: Contract Call - 获取奖池信息
-            // const gameInfo = await gameContract.getGameInfo(roomId);
-            // document.getElementById('gamePot').textContent = '奖池: ' + formatAmount(ethers.formatUnits(gameInfo.pot)) + ' TMFS';
-        }
-
-        function renderHandCards() {
-            const handContainer = document.getElementById('playerHand');
-            const cards = ['3♠️', '4♥️', '5♣️', '6♦️', '7♠️', '8♥️', '9♣️', '10♦️', 'J♠️', 'Q♥️', 'K♣️', 'A♦️', '2♠️', '小王', '大王', '3♥️', '4♣️'];
-            
-            handContainer.innerHTML = cards.map((card, index) => `
-                <div class="hand-card ${card.includes('♥️') || card.includes('♦️') ? 'card-red' : 'card-black'}" 
-                     onclick="toggleCard(${index})" data-index="${index}">
-                    ${card}
-                </div>
-            `).join('');
-        }
-
-        function toggleCard(index) {
-            const card = document.querySelector(`[data-index="${index}"]`);
-            const idx = selectedCards.indexOf(index);
-            if (idx > -1) {
-                selectedCards.splice(idx, 1);
-                card.classList.remove('selected');
-            } else {
-                selectedCards.push(index);
-                card.classList.add('selected');
-            }
-        }
-
-        async function playCards() {
-            if (selectedCards.length === 0) { showToast('请选择要出的牌', true); return; }
-            
-            // TODO: Contract Call - 出牌
-            // 1. 对选中的牌进行签名
-            // 2. 调用 gameContract.playCards(roomId, cardIndices, signature)
-            // 3. 监听 CardsPlayed 事件
-            
-            showToast('出牌成功！');
-            selectedCards = [];
-            document.querySelectorAll('.hand-card').forEach(c => c.classList.remove('selected'));
-            
-            // 模拟AI回合
-            document.getElementById('turnInfo').textContent = 'AI思考中...';
-            setTimeout(() => {
-                document.getElementById('turnInfo').textContent = '轮到你了';
-            }, 2000);
-        }
-
-        async function skipTurn() {
-            // TODO: Contract Call - 跳过回合 gameContract.skipTurn(roomId)
-            showToast('跳过回合');
-        }
-
-        function exitGame() {
-            if (confirm('确定要退出游戏吗？')) {
-                showPage('home');
-                selectedCards = [];
-                document.getElementById('startControl').style.display = 'block';
-                document.getElementById('gameControls').style.display = 'none';
-                document.getElementById('playerHand').innerHTML = '';
-            }
-        }
-
         // ==================== 排行功能 ====================
         async function loadRankData() {
-            // TODO: Contract Call - 获取燃烧排行榜
-            // 建议: 从分红合约获取 burnRecords 或从后端API获取
-            // 1. 获取前100名燃烧地址
-            // 2. 获取用户自己的排名
-            // 3. 计算预计收益 (积分 / 总积分 * 每日分发量)
-            
             try {
-                // 模拟数据
-                const mockData = [
-                    { rank: 1, address: '0x8888...8888', amount: '1000000', reward: '5.2' },
-                    { rank: 2, address: '0x7777...7777', amount: '800000', reward: '4.1' },
-                    { rank: 3, address: '0x6666...6666', amount: '600000', reward: '3.2' },
-                ];
-                
-                // 实际应从合约获取:
-                // const topBurners = await dividendContract.getTopBurners(100);
-                // const myRank = await dividendContract.getUserRank(userAddress);
-                
+                // TODO: 从合约获取排行数据
             } catch (error) {
                 console.error('加载排行失败:', error);
             }
@@ -901,19 +707,15 @@
         function switchRankTab(tab) {
             document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-            
-            // TODO: Contract Call - 切换排行类型
-            // if (tab === 'burn') 按燃烧量排序
-            // if (tab === 'reward') 按收益排序
         }
 
         // ==================== 页面切换 ====================
         function showPage(page) {
-            ['homePage', 'gamePage', 'burnPage', 'claimPage', 'rankPage'].forEach(id => {
+            ['homePage', 'burnPage', 'claimPage', 'rankPage'].forEach(id => {
                 document.getElementById(id).style.display = 'none';
             });
             
-            const pageMap = { 'home': 'homePage', 'game': 'gamePage', 'burn': 'burnPage', 'claim': 'claimPage', 'rank': 'rankPage' };
+            const pageMap = { 'home': 'homePage', 'burn': 'burnPage', 'claim': 'claimPage', 'rank': 'rankPage' };
             if (pageMap[page]) {
                 document.getElementById(pageMap[page]).style.display = 'block';
             }
@@ -921,7 +723,6 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
             
-            // 加载特定页面数据
             if (page === 'claim' || page === 'burn') {
                 if (tokenContract) { loadAllData(); loadDividendData(); }
             } else if (page === 'rank') {
@@ -937,7 +738,6 @@
 
         window.addEventListener('load', () => {
             console.log('✅ DApp 已加载');
-            // 定时刷新价格
             setInterval(fetchTokenPrice, 30000);
         });
     </script>
