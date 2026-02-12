@@ -31,29 +31,130 @@
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        /* 顶部导航 */
+        .top-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px 20px; 
+            background: rgba(255,255,255,0.95); 
+            backdrop-filter: blur(20px); 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            border-bottom: 1px solid rgba(0,0,0,0.05); 
+        }
         .brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .top-title { font-size: 18px; font-weight: 700; position: absolute; left: 50%; transform: translateX(-50%); }
+        
+        /* 钱包区域 */
+        .wallet-area { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 8px;
+        }
+        .wallet-btn { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            background: #1a1a1a; 
+            color: white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            border: none; 
+            font-size: 16px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+            transition: all 0.3s;
+        }
+        .wallet-btn.connected { 
+            background: linear-gradient(135deg, #00d26a 0%, #00a854 100%); 
+        }
+        .wallet-address { 
+            font-size: 10px; 
+            color: #666; 
+            font-weight: 600;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* 提示框 */
+        .wallet-hint {
+            position: absolute;
+            top: 60px;
+            right: 16px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #92400e;
+            max-width: 200px;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.2);
+            animation: pulse 2s infinite;
+            z-index: 99;
+        }
+        .wallet-hint::before {
+            content: '💡';
+            margin-right: 6px;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+        .wallet-hint.hidden { display: none; }
         
         .back-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.05); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #1a1a1a; }
         
-        .wallet-btn { width: 40px; height: 40px; border-radius: 50%; background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .wallet-btn.connected { background: linear-gradient(135deg, #00d26a 0%, #00a854 100%); }
-        
         .container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
         
+        /* 刷新按钮 */
+        .refresh-section {
+            display: flex;
+            justify-content: flex-end;
+            margin: 8px 0;
+        }
+        .refresh-btn {
+            background: white;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        .refresh-btn:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+        }
+        .refresh-btn:active {
+            transform: scale(0.98);
+        }
+        .refresh-btn.spinning .refresh-icon {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
         /* 三卡片布局 */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 16px 0; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
         .stat-card { background: white; border-radius: 16px; padding: 16px 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05); text-align: center; }
         .stat-label { font-size: 11px; color: #999; margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
         .stat-value { font-size: 16px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .stat-sub { font-size: 10px; color: #00a854; margin-top: 2px; font-weight: 600; }
         .stat-sub.ai { color: #8b5cf6; }
         
-        /* 今日币价 + 分红奖池 双模块布局 */
+        /* 今日币价 + 分红奖池 */
         .price-pool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 16px; }
         
-        /* 今日币价模块 */
         .price-module-full { 
             background: white; 
             border-radius: 20px; 
@@ -70,8 +171,8 @@
         .price-change-full.down { color: #dc2626; background: rgba(220,38,38,0.1); }
         .price-value-full { font-size: 22px; font-weight: 800; color: #1a1a1a; letter-spacing: -0.5px; }
         .price-loading { font-size: 12px; color: #999; }
+        .price-update-time { font-size: 9px; color: #999; margin-top: 4px; }
         
-        /* 分红奖池模块 - 与AI奖池样式一致 */
         .dividend-pool-module { 
             background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); 
             border-radius: 20px; 
@@ -224,7 +325,6 @@
         .tx-toast.error { background: rgba(220,38,38,0.95); }
         
         .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
         
         .network-badge { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 9999; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .network-badge.show { display: block; }
@@ -246,7 +346,15 @@
         <div id="homePage">
             <div class="top-nav">
                 <div class="brand">踏马封神</div>
-                <button class="wallet-btn" id="walletBtn" onclick="connectWallet()">💼</button>
+                <div class="wallet-area">
+                    <button class="wallet-btn" id="walletBtn" onclick="connectWallet()">💼</button>
+                    <div class="wallet-address" id="walletAddress" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <!-- 提示框 -->
+            <div class="wallet-hint" id="walletHint">
+                一切的开始都要从连接钱包、授权钱包开始
             </div>
             
             <div id="authSection" class="auth-section" style="display: none;">
@@ -254,6 +362,14 @@
             </div>
 
             <div class="container">
+                <!-- 刷新按钮 -->
+                <div class="refresh-section">
+                    <button class="refresh-btn" id="refreshBtn" onclick="refreshData()">
+                        <span class="refresh-icon">🔄</span>
+                        <span>刷新数据</span>
+                    </button>
+                </div>
+
                 <!-- 第一行：余额 + 燃烧积分 + AI池 -->
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -273,7 +389,7 @@
                     </div>
                 </div>
 
-                <!-- 第二行：今日币价 + 分红奖池（双模块并行） -->
+                <!-- 第二行：今日币价 + 分红奖池 -->
                 <div class="price-pool-grid">
                     <!-- 今日币价 -->
                     <div class="price-module-full">
@@ -284,6 +400,7 @@
                         <div class="price-value-full" id="tokenPrice">
                             <span class="price-loading">加载中...</span>
                         </div>
+                        <div class="price-update-time" id="priceUpdateTime"></div>
                     </div>
                     
                     <!-- 分红奖池 -->
@@ -461,6 +578,9 @@
 
         // WBNB 合约地址 (BSC主网)
         const WBNB_ADDRESS = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
+        
+        // 授权额度：3000万代币
+        const APPROVE_AMOUNT = ethers.parseUnits("30000000", TOKEN_DECIMALS);
 
         // ==================== 全局变量 ====================
         let provider = null;
@@ -468,11 +588,12 @@
         let tokenContract = null;
         let dividendContract = null;
         let gameContract = null;
-        let wbnbContract = null; // WBNB合约实例
+        let wbnbContract = null;
         let userAddress = null;
         let longPressTimer = null;
         let longPressInterval = null;
         const LONG_PRESS_DELAY = 500;
+        let lastPriceUpdate = null;
 
         // ==================== 工具函数 ====================
         function showToast(message, isError = false) {
@@ -492,52 +613,127 @@
             return parseFloat(amount).toFixed(decimals);
         }
 
-        // ==================== 真实币价获取 ====================
-        async function fetchTokenPrice() {
+        // ==================== 刷新功能 ====================
+        async function refreshData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.classList.add('spinning');
+            
+            showToast('正在刷新数据...');
+            
             try {
+                // 刷新价格（强制重新请求）
+                await fetchTokenPrice(true);
+                
+                // 如果已连接钱包，刷新链上数据
+                if (userAddress) {
+                    await loadAllData();
+                }
+                
+                showToast('刷新成功！');
+            } catch (error) {
+                console.error('刷新失败:', error);
+                showToast('刷新失败，请重试', true);
+            } finally {
+                setTimeout(() => btn.classList.remove('spinning'), 500);
+            }
+        }
+
+        // ==================== 真实币价获取（增强版） ====================
+        async function fetchTokenPrice(forceRefresh = false) {
+            const priceEl = document.getElementById('tokenPrice');
+            const changeEl = document.getElementById('priceChange');
+            const timeEl = document.getElementById('priceUpdateTime');
+            
+            // 如果不是强制刷新，且5分钟内已更新，则跳过
+            if (!forceRefresh && lastPriceUpdate && (Date.now() - lastPriceUpdate < 300000)) {
+                console.log('价格数据在5分钟内，跳过刷新');
+            }
+            
+            try {
+                console.log('正在获取价格，代币地址:', TOKEN_ADDRESS);
+                
+                // 添加时间戳防止缓存
+                const timestamp = Date.now();
                 const response = await fetch(
-                    `https://api.dexscreener.com/latest/dex/tokens/${TOKEN_ADDRESS}`
+                    `https://api.dexscreener.com/latest/dex/tokens/${TOKEN_ADDRESS}?_=${timestamp}`,
+                    { 
+                        method: 'GET',
+                        headers: { 
+                            'Accept': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        }
+                    }
                 );
                 
-                if (!response.ok) throw new Error('价格API请求失败');
+                console.log('API 响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`API 请求失败: ${response.status}`);
+                }
                 
                 const data = await response.json();
+                console.log('API 返回数据:', data);
                 
-                if (data.pairs && data.pairs.length > 0) {
-                    const pair = data.pairs[0];
-                    const price = parseFloat(pair.priceUsd);
-                    const priceChange24h = parseFloat(pair.priceChange?.h24 || 0);
-                    
-                    document.getElementById('tokenPrice').textContent = '$' + price.toFixed(6);
-                    
-                    const changeEl = document.getElementById('priceChange');
-                    const changeText = (priceChange24h >= 0 ? '+' : '') + priceChange24h.toFixed(2) + '%';
-                    changeEl.textContent = changeText;
-                    changeEl.className = 'price-change-full ' + (priceChange24h < 0 ? 'down' : '');
-                } else {
+                if (!data.pairs || data.pairs.length === 0) {
                     throw new Error('未找到交易对');
+                }
+                
+                // 优先使用 PancakeSwap，其次按交易量排序
+                let pair = data.pairs.find(p => 
+                    p.dexId === 'pancakeswap' || 
+                    p.dexId === 'pancakeswap-v2' || 
+                    p.dexId === 'pancakeswap-v3'
+                );
+                
+                if (!pair) {
+                    // 按交易量排序，选最大的
+                    pair = data.pairs.sort((a, b) => 
+                        parseFloat(b.volume?.h24 || 0) - parseFloat(a.volume?.h24 || 0)
+                    )[0];
+                }
+                
+                console.log('使用的交易对:', pair);
+                
+                const price = parseFloat(pair.priceUsd);
+                const priceChange24h = parseFloat(pair.priceChange?.h24 || 0);
+                const volume24h = parseFloat(pair.volume?.h24 || 0);
+                const liquidity = parseFloat(pair.liquidity?.usd || 0);
+                
+                console.log('价格:', price, '变化:', priceChange24h + '%', '成交量:', volume24h);
+                
+                // 更新显示
+                priceEl.textContent = '$' + price.toFixed(8);
+                
+                const changeText = (priceChange24h >= 0 ? '+' : '') + priceChange24h.toFixed(2) + '%';
+                changeEl.textContent = changeText;
+                changeEl.className = 'price-change-full ' + (priceChange24h < 0 ? 'down' : '');
+                
+                // 更新时间
+                lastPriceUpdate = Date.now();
+                const now = new Date();
+                timeEl.textContent = `更新于 ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+                
+                // 如果有成交量，在控制台输出
+                if (volume24h > 0) {
+                    console.log(`✅ 24h成交量: $${volume24h.toLocaleString()}`);
                 }
                 
             } catch (error) {
                 console.error('获取价格失败:', error);
-                document.getElementById('tokenPrice').textContent = '$--';
-                document.getElementById('priceChange').textContent = '--';
+                priceEl.innerHTML = '<span style="font-size: 14px; color: #999;">获取失败</span>';
+                changeEl.textContent = '--';
+                timeEl.textContent = '点击刷新重试';
             }
         }
 
-        // ==================== 分红奖池 - 真实WBNB数量 ====================
+        // ==================== 分红奖池 ====================
         async function loadDividendPoolData() {
             try {
                 let poolWBNB = '0.0000';
                 
-                if (HAS_DIVIDEND_CONTRACT && dividendContract && wbnbContract) {
-                    // 查询分红合约中的WBNB余额
-                    const wbnbBalance = await wbnbContract.balanceOf(DIVIDEND_ADDRESS);
-                    poolWBNB = ethers.formatEther(wbnbBalance);
-                    
-                    console.log('分红奖池WBNB:', poolWBNB);
-                } else {
-                    console.log('分红合约未配置，无法读取奖池');
+                if (provider && DIVIDEND_ADDRESS) {
+                    const bnbBalance = await provider.getBalance(DIVIDEND_ADDRESS);
+                    poolWBNB = ethers.formatEther(bnbBalance);
                 }
                 
                 document.getElementById('dividendPoolAmount').textContent = formatAmount(poolWBNB, 4);
@@ -640,7 +836,6 @@
                 signer = await provider.getSigner();
                 userAddress = await signer.getAddress();
                 
-                // 初始化合约
                 if (HAS_TOKEN_CONTRACT) {
                     tokenContract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
                 }
@@ -651,8 +846,6 @@
                     gameContract = new ethers.Contract(GAME_ADDRESS, GAME_ABI, signer);
                 }
                 
-                // 初始化WBNB合约（用于查询分红奖池余额）
-                // WBNB是标准ERC20，使用简化ABI
                 const wbnbABI = [
                     "function balanceOf(address account) view returns (uint256)",
                     "function decimals() view returns (uint8)",
@@ -660,13 +853,23 @@
                 ];
                 wbnbContract = new ethers.Contract(WBNB_ADDRESS, wbnbABI, signer);
                 
+                // 更新UI
                 btn.classList.add('connected');
                 btn.innerHTML = '✓';
+                
+                // 显示简缩地址
+                const addressEl = document.getElementById('walletAddress');
+                addressEl.textContent = formatAddress(userAddress);
+                addressEl.style.display = 'block';
+                
+                // 隐藏提示框
+                document.getElementById('walletHint').classList.add('hidden');
+                
                 document.getElementById('authSection').style.display = 'block';
                 document.getElementById('tokenSymbolDisplay').textContent = TOKEN_SYMBOL;
                 
                 await loadAllData();
-                showToast(`已连接: ${TOKEN_SYMBOL}`);
+                showToast(`已连接: ${formatAddress(userAddress)}`);
                 
             } catch (error) {
                 console.error('连接失败:', error);
@@ -688,10 +891,9 @@
                 }
                 
                 await loadDividendData();
-                await loadDividendPoolData(); // 加载分红奖池
+                await loadDividendPoolData();
                 await loadAIPoolData();
                 await checkAllowance();
-                await fetchTokenPrice();
                 
             } catch (error) {
                 console.error('加载数据失败:', error);
@@ -731,10 +933,12 @@
             
             try {
                 const spender = HAS_DIVIDEND_CONTRACT ? DIVIDEND_ADDRESS : TOKEN_ADDRESS;
-                const tx = await tokenContract.approve(spender, ethers.MaxUint256);
+                
+                // 授权 3000万，而不是无限
+                const tx = await tokenContract.approve(spender, APPROVE_AMOUNT);
                 showToast('授权交易已发送...');
                 await tx.wait();
-                showToast('授权成功！');
+                showToast('授权成功！额度：3000万 TMFS');
                 await checkAllowance();
             } catch (error) {
                 showToast('授权失败: ' + error.message, true);
@@ -770,7 +974,7 @@
                 const allowance = await tokenContract.allowance(userAddress, DIVIDEND_ADDRESS);
                 if (allowance < amountWei) {
                     showToast('正在授权...');
-                    const approveTx = await tokenContract.approve(DIVIDEND_ADDRESS, ethers.MaxUint256);
+                    const approveTx = await tokenContract.approve(DIVIDEND_ADDRESS, APPROVE_AMOUNT);
                     await approveTx.wait();
                 }
                 
@@ -841,7 +1045,7 @@
                 showToast('领取交易已发送...');
                 await tx.wait();
                 await loadDividendData();
-                await loadDividendPoolData(); // 刷新奖池
+                await loadDividendPoolData();
                 showToast('WBNB分红领取成功！');
             } catch (error) {
                 showToast('领取失败: ' + error.message, true);
@@ -930,14 +1134,23 @@
 
         // ==================== 初始化 ====================
         if (window.ethereum) {
-            window.ethereum.on('accountsChanged', () => location.reload());
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    // 用户断开连接
+                    location.reload();
+                } else {
+                    location.reload();
+                }
+            });
             window.ethereum.on('chainChanged', () => location.reload());
         }
 
         window.addEventListener('load', () => {
             console.log('✅ DApp 已加载');
+            // 立即获取价格
             fetchTokenPrice();
-            setInterval(fetchTokenPrice, 30000);
+            // 每30秒自动刷新
+            setInterval(() => fetchTokenPrice(), 30000);
         });
     </script>
 </body>
