@@ -1,44 +1,58 @@
-// abi.js - 合约 ABI 配置文件
-// 修改此文件即可更新合约接口，无需修改 index.html
-
+// abi.js - 合约配置文件
 window.CONTRACT_CONFIG = {
-    // ==================== 必填配置 ====================
+    // 代币合约地址 (你的TMFS代币)
+    tokenAddress: "0x...",
     
-    // 代币合约地址（你的斗币合约）
-    tokenAddress: "0x1234567890123456789012345678901234567890", // ← 修改为你的合约地址
+    // 销毁分红合约地址
+    dividendAddress: "0x...",
     
-    // 分红/销毁合约地址（如果有的话，没有则保持空字符串）
-    dividendAddress: "", // ← 如果有独立的分红合约，填在这里
+    // 游戏合约地址 (部署后填写)
+    gameAddress: "0x...",
     
-    // 网络配置 (BSC主网)
-    chainId: "0x38", // 56的十六进制
+    // 网络配置
+    chainId: "0x38", // BSC主网
     chainName: "BSC Mainnet",
     rpcUrl: "https://bsc-dataseed.binance.org/",
-    blockExplorerUrl: "https://bscscan.com",
-    
-    // 代币精度（如果不确定，保持18）
     decimals: 18,
     
-    // ==================== ABI 定义 ====================
-    
-    // 主代币合约 ABI（FlapTaxToken）
+    // 代币合约ABI (标准ERC20 + 你的自定义函数)
     tokenABI: [
-        {"inputs":[{"components":[{"internalType":"address","name":"PCS_V2_FACTORY","type":"address"},{"internalType":"bytes32","name":"PCS_V2_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"PCS_V2_ROUTER","type":"address"},{"internalType":"address","name":"PCS_SMART_ROUTER","type":"address"},{"internalType":"address","name":"WETH","type":"address"},{"internalType":"address","name":"PCS_V3_FACTORY","type":"address"},{"internalType":"bytes32","name":"PCS_V3_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"UNI_V2_FACTORY","type":"address"},{"internalType":"bytes32","name":"UNI_V2_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"UNI_V3_FACTORY","type":"address"},{"internalType":"bytes32","name":"UNI_V3_CODE_HASH","type":"bytes32"},{"internalType":"address","name":"PCS_V4_VAULT","type":"address"},{"internalType":"address","name":"UNI_V4_POOL","type":"address"},{"internalType":"uint256","name":"MIN_LIQ_THRESHOLD","type":"uint256"},{"internalType":"uint256","name":"START_LIQ_THRESHOLD","type":"uint256"},{"internalType":"uint256","name":"ANTI_FARMER_DURATION","type":"uint256"}],"internalType":"struct FlapTaxToken.ConstructorParams","name":"params","type":"tuple"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[],"name":"EIP712DomainChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"quoteToken","type":"address"},{"indexed":false,"internalType":"uint256","name":"taxAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"outputAmount","type":"uint256"}],"name":"FlapTaxLiquidationSuccess","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"version","type":"uint8"}],"name":"Initialized","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint8","name":"fromState","type":"uint8"},{"indexed":false,"internalType":"uint8","name":"toState","type":"uint8"}],"name":"PoolStateChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"reason","type":"bytes"}],"name":"TaxLiquidationError","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"from","type":"address"},{"indexed":false,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"TransferFlapToken","type":"event"},{"inputs":[],"name":"ANTI_FARMER_DURATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"DOMAIN_SEPARATOR","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MIN_LIQ_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"QUOTE_TOKEN","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"START_LIQ_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TAX_DURATION","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"antiFarmerExpirationTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"eip712Domain","outputs":[{"internalType":"bytes1","name":"fields","type":"bytes1"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"version","type":"string"},{"internalType":"uint256","name":"chainId","type":"uint256"},{"internalType":"address","name":"verifyingContract","type":"address"},{"internalType":"bytes32","name":"salt","type":"bytes32"},{"internalType":"uint256[]","name":"extensions","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"finalizeMigration","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"components":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"string","name":"meta","type":"string"},{"internalType":"uint16","name":"tax","type":"uint16"},{"internalType":"address","name":"taxSplitter","type":"address"},{"internalType":"address","name":"quoteToken","type":"address"},{"internalType":"uint256","name":"liqExpectedOutputAmount","type":"uint256"},{"internalType":"uint256","name":"taxDuration","type":"uint256"}],"internalType":"struct IFlapTaxToken.InitParams","name":"params","type":"tuple"}],"name":"initialize","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"liqExpectedOutputAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"liquidationThreshold","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mainPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"maxSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"metaURI","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"permit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pools","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"startMigration","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"state","outputs":[{"internalType":"enum FlapTaxToken.PoolState","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxExpirationTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxRate","outputs":[{"internalType":"uint16","name":"","type":"uint16"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"taxSplitter","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"}
+        "function balanceOf(address) view returns (uint256)",
+        "function approve(address,uint256) returns (bool)",
+        "function allowance(address,address) view returns (uint256)",
+        "function totalSupply() view returns (uint256)",
+        "function transferFrom(address,address,uint256) returns (bool)",
+        "function transfer(address,uint256) returns (bool)",
+        "function decimals() view returns (uint8)",
+        "function symbol() view returns (string)",
+        "event Transfer(address indexed from, address indexed to, uint256 value)",
+        "event Approval(address indexed owner, address indexed spender, uint256 value)"
     ],
     
-    // 分红/销毁合约 ABI（如果有独立合约，粘贴在这里）
-    // 目前为空，添加后自动启用销毁功能
+    // 销毁分红合约ABI (按你的合约函数填写)
     dividendABI: [
-        // 示例格式（请替换为你的真实 ABI）：
-        // {"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[],"stateMutability":"nonpayable","type":"function"},
-        // {"inputs":[],"name":"claimDividend","outputs":[],"stateMutability":"nonpayable","type":"function"},
-        // {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getPendingDividend","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+        "function burn(uint256 amount)",
+        "function claim()",
+        "function check(address user) view returns (uint256)",
+        "function points(address user) view returns (uint256)",
+        "function claimed(address user) view returns (uint256)",
+        "function totalBurned() view returns (uint256)",
+        "function getTopBurners(uint256 count) view returns (address[] memory, uint256[] memory)",
+        "function getUserRank(address user) view returns (uint256)",
+        "event Burn(address indexed user, uint256 amount, uint256 points)",
+        "event Claim(address indexed user, uint256 amount)"
+    ],
+    
+    // 游戏合约ABI (部署后按实际函数填写)
+    gameABI: [
+        // 示例函数，按你的游戏合约实际ABI填写
+        "function createRoom(uint256 stakeAmount) returns (uint256 roomId)",
+        "function joinRoom(uint256 roomId)",
+        "function playCards(uint256 roomId, uint8[] cardIndices, bytes signature)",
+        "function skipTurn(uint256 roomId)",
+        "function getGameInfo(uint256 roomId) view returns (tuple)",
+        "function getPlayerHand(uint256 roomId, address player) view returns (uint8[])",
+        "event GameStarted(uint256 indexed roomId, address indexed player)",
+        "event CardsPlayed(uint256 indexed roomId, address indexed player, uint8[] cards)"
     ]
 };
-
-// 兼容性检查
-if (typeof window !== 'undefined') {
-    console.log('✅ ABI 配置已加载');
-    console.log('合约地址:', window.CONTRACT_CONFIG.tokenAddress);
-    console.log('如需修改配置，请编辑 abi.js 文件');
-}
