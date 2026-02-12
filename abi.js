@@ -1,21 +1,21 @@
 // abi.js - 合约配置文件
 window.CONTRACT_CONFIG = {
-    // 代币合约地址 (你的TMFS代币)
-    tokenAddress: "0x...",
+    // 代币合约地址 (TMFS)
+    tokenAddress: "0x377e22651Ae3623aAC2724B0AA70E928FeAC7777",
     
-    // 销毁分红合约地址
-    dividendAddress: "0x...",
+    // 销毁分红合约地址 (TAMABurnPool)
+    dividendAddress: "0xf61E6CCE31Ec6cfF95932a45837AB026ba61e4aB",
     
     // 游戏合约地址 (部署后填写)
-    gameAddress: "0x...",
+    gameAddress: "",
     
-    // 网络配置
-    chainId: "0x38", // BSC主网
+    // 网络配置 (BSC主网)
+    chainId: "0x38",
     chainName: "BSC Mainnet",
     rpcUrl: "https://bsc-dataseed.binance.org/",
     decimals: 18,
     
-    // 代币合约ABI (标准ERC20 + 你的自定义函数)
+    // 代币合约ABI (标准ERC20)
     tokenABI: [
         "function balanceOf(address) view returns (uint256)",
         "function approve(address,uint256) returns (bool)",
@@ -29,30 +29,41 @@ window.CONTRACT_CONFIG = {
         "event Approval(address indexed owner, address indexed spender, uint256 value)"
     ],
     
-    // 销毁分红合约ABI (按你的合约函数填写)
+    // 销毁分红合约ABI (TAMABurnPool)
     dividendABI: [
-        "function burn(uint256 amount)",
-        "function claim()",
-        "function check(address user) view returns (uint256)",
-        "function points(address user) view returns (uint256)",
-        "function claimed(address user) view returns (uint256)",
+        // 读函数
+        "function tamaToken() view returns (address)",
+        "function wbnb() view returns (address)",
         "function totalBurned() view returns (uint256)",
-        "function getTopBurners(uint256 count) view returns (address[] memory, uint256[] memory)",
-        "function getUserRank(address user) view returns (uint256)",
-        "event Burn(address indexed user, uint256 amount, uint256 points)",
-        "event Claim(address indexed user, uint256 amount)"
+        "function totalDividend() view returns (uint256)",
+        "function totalClaimed() view returns (uint256)",
+        "function dividendPerShare() view returns (uint256)",
+        "function lastFundTime() view returns (uint256)",
+        "function userBurned(address) view returns (uint256)",
+        "function userClaimed(address) view returns (uint256)",
+        "function userBurnHistory(address,uint256) view returns (uint256 amount, uint256 timestamp, uint256 dividendPerShareAtBurn)",
+        "function claimable(address user) view returns (uint256)",
+        "function getUserBurnCount(address user) view returns (uint256)",
+        "function getUserInfo(address user) view returns (uint256 burned, uint256 claimed, uint256 claimableAmount, uint256 burnCount, uint256 lastBurnTime)",
+        "function getPoolInfo() view returns (uint256 _totalBurned, uint256 _totalDividend, uint256 _totalClaimed, uint256 _remaining, uint256 _dividendPerShare)",
+        "function remainingPool() view returns (uint256)",
+        "function BURN_ADDRESS() view returns (address)",
+        "function MIN_BURN_AMOUNT() view returns (uint256)",
+        "function MIN_FUND_AMOUNT() view returns (uint256)",
+        "function FUND_LOCK_PERIOD() view returns (uint256)",
+        "function MAX_BURN_RECORDS() view returns (uint256)",
+        
+        // 写函数
+        "function fundPool(uint256 amount)",
+        "function recordBurn(uint256 amount)",
+        "function claim()",
+        
+        // 事件
+        "event BurnRecorded(address indexed user, uint256 amount, uint256 totalBurned, uint256 timestamp)",
+        "event DividendClaimed(address indexed user, uint256 wbnbAmount)",
+        "event PoolFunded(address indexed sender, uint256 amount, uint256 newDividendPerShare)"
     ],
     
-    // 游戏合约ABI (部署后按实际函数填写)
-    gameABI: [
-        // 示例函数，按你的游戏合约实际ABI填写
-        "function createRoom(uint256 stakeAmount) returns (uint256 roomId)",
-        "function joinRoom(uint256 roomId)",
-        "function playCards(uint256 roomId, uint8[] cardIndices, bytes signature)",
-        "function skipTurn(uint256 roomId)",
-        "function getGameInfo(uint256 roomId) view returns (tuple)",
-        "function getPlayerHand(uint256 roomId, address player) view returns (uint8[])",
-        "event GameStarted(uint256 indexed roomId, address indexed player)",
-        "event CardsPlayed(uint256 indexed roomId, address indexed player, uint8[] cards)"
-    ]
+    // 游戏合约ABI (部署后填写)
+    gameABI: []
 };
